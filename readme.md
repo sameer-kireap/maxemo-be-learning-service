@@ -83,12 +83,13 @@ All endpoints return a standardized JSON envelope (`APIResponse[T]`):
 ### Production Multi-Factor Scoring Formula
 In production clinical learning platforms, recommending topics requires balancing 4 signals:
 
-$$\text{TopicScore}(t) = W_{\text{acc}} \cdot S_{\text{acc}}(t) + W_{\text{err}} \cdot S_{\text{err}}(t) + W_{\text{decay}} \cdot S_{\text{decay}}(t) + S_{\text{cold\_start}}(t)$$
+$$\text{TopicScore}(t) = W_{\text{acc}} \cdot S_{\text{acc}}(t) + W_{\text{err}} \cdot S_{\text{err}}(t) + W_{\text{decay}} \cdot S_{\text{decay}}(t) + S_{\text{cold-start}}(t)$$
 
 1. **Low Accuracy Signal ($S_{\text{acc}}$)**: Evaluates when accuracy is $< 50\%$. Reason: `"Low accuracy (33.3%)"`.
 2. **Repeated Errors Signal ($S_{\text{err}}$)**: Triggered when incorrect attempts $\ge 3$. Reason: `"Repeated incorrect attempts (5 errors)"`.
 3. **Time-Decay / Forgetting Curve ($S_{\text{decay}}$)**: Triggered when days since last review $\ge 14$ days. Reason: `"Long time since last review (18 days ago)"`.
-4. **Cold Start Risk ($S_{\text{cold\_start}}$)**: Assigns high priority ($85.0$) to unattempted topics. Reason: `"Unattempted topic — needs initial practice"`.
+4. **Cold Start Risk ($S_{\text{cold-start}}$)**: Assigns high priority ($85.0$) to unattempted topics. Reason: `"Unattempted topic — needs initial practice"`.
+
 
 ### Why This Explainable Algorithm Was Chosen
 - **Real-Life Clinical Efficacy**: Mirrors spaced repetition learning systems (Anki / Duolingo).

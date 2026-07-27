@@ -54,7 +54,7 @@ CREATE TABLE learning_schema.exam_topic_weights (
 
 The topic priority scoring algorithm transitions from pure accuracy ranking to an **Urgency-Weighted Priority Score**:
 
-$$\text{DaysToExam} = \max\left(1, \lfloor \text{exam\_date} - \text{current\_date} \rfloor\right)$$
+$$\text{DaysToExam} = \max\left(1, \lfloor \text{exam-date} - \text{current-date} \rfloor\right)$$
 
 $$\text{UrgencyWeight}(\text{DaysToExam}) = \begin{cases} 
 2.5 & \text{if } \text{DaysToExam} \le 14 \text{ (Sprint Revision)} \\
