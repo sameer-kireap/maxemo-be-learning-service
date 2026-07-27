@@ -10,28 +10,28 @@ The **Maxemo Learning Analytics Service** is constructed using **Clean Architect
 
 ```mermaid
 graph TD
-    subgraph Presentation Layer ["Presentation Layer (app/api/)"]
+    subgraph L1 ["Presentation Layer (app/api/)"]
         A[FastAPI Routers] --> B[Pydantic Request/Response DTOs]
     end
 
-    subgraph Service & Interface Layer ["Service & Interface Layer (app/service/, app/interface/)"]
+    subgraph L2 ["Service & Interface Layer (app/service/, app/interface/)"]
         C[Abstract Service Interfaces - ABC] --> D[Domain Service Implementations]
         D --> E[Custom Domain Exceptions]
         D --> F[DTO Mappers]
     end
 
-    subgraph Repository Layer ["Repository Layer (app/repository/, app/utils/)"]
+    subgraph L3 ["Repository Layer (app/repository/, app/utils/)"]
         G[BaseRepository - Generic] --> H[QueryBuilder - Window Count]
         H --> I[Concrete Repositories - Topic, Question, Attempt]
     end
 
-    subgraph Database Infrastructure Layer ["Database Infrastructure Layer (app/core/, app/model/)"]
+    subgraph L4 ["Database Infrastructure Layer (app/core/, app/model/)"]
         J[Async SQLAlchemy Engine] --> K[PostgreSQL 16 - learning_schema]
     end
 
-    Presentation Layer --> Service & Interface Layer
-    Service & Interface Layer --> Repository Layer
-    Repository Layer --> Database Infrastructure Layer
+    L1 --> L2
+    L2 --> L3
+    L3 --> L4
 ```
 
 ### Layer Breakdown

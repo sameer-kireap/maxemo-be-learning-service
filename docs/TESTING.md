@@ -12,12 +12,12 @@ The test suite enforces 100% test isolation, asynchronous database session mocki
 
 ```mermaid
 graph TD
-    subgraph Test Suite ("tests/")
-        A[tests/conftest.py<br/>Async DB Fixtures & DI Overrides] --> B[test_api.py<br/>End-to-End API Integration]
-        A --> C[test_services.py<br/>Business Logic Unit Tests]
-        A --> D[test_repositories.py<br/>Data Access Layer Tests]
-        A --> E[test_exceptions.py<br/>Global Error Handler Tests]
-        A --> F[test_health.py<br/>Health Check Endpoint Tests]
+    subgraph TS ["Test Suite (tests/)"]
+        A["tests/conftest.py<br/>Async DB Fixtures & DI Overrides"] --> B["test_api.py<br/>End-to-End API Integration"]
+        A --> C["test_services.py<br/>Business Logic Unit Tests"]
+        A --> D["test_repositories.py<br/>Data Access Layer Tests"]
+        A --> E["test_exceptions.py<br/>Global Error Handler Tests"]
+        A --> F["test_health.py<br/>Health Check Endpoint Tests"]
     end
 ```
 
