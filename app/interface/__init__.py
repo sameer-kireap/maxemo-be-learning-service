@@ -1,4 +1,11 @@
-"""Abstract repository interfaces (protocols).
+"""Service interface contracts."""
 
-Services depend on these interfaces, never on concrete implementations.
-"""
+from app.interface.attempt_service import AttemptServiceProtocol
+from app.interface.question_service import QuestionServiceProtocol
+from app.interface.topic_service import TopicServiceProtocol
+
+__all__ = [
+    "AttemptServiceProtocol",
+    "QuestionServiceProtocol",
+    "TopicServiceProtocol",
+]

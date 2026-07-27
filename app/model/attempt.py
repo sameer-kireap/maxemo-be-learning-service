@@ -3,7 +3,7 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Index, Integer
+from sqlalchemy import Boolean, ForeignKey, Index, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -28,6 +28,7 @@ class QuestionAttempt(Base, TimestampMixin):
 
     question_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
+        ForeignKey(f"{LEARNING_SCHEMA}.questions.id"),
         index=True,
     )
 
