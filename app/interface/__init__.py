@@ -1,11 +1,11 @@
-"""Service interface contracts."""
+"""Service abstract base class interfaces."""
 
-from app.interface.attempt_service import AttemptServiceProtocol
-from app.interface.question_service import QuestionServiceProtocol
-from app.interface.topic_service import TopicServiceProtocol
+from app.interface.attempt_service import IAttemptService
+from app.interface.question_service import IQuestionService
+from app.interface.topic_service import ITopicService
 
 __all__ = [
-    "AttemptServiceProtocol",
-    "QuestionServiceProtocol",
-    "TopicServiceProtocol",
+    "IAttemptService",
+    "IQuestionService",
+    "ITopicService",
 ]
