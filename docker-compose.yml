@@ -7,11 +7,8 @@ services:
     command: ["/app/docker-entrypoint.sh"]
     ports:
       - "8000:8000"
-    environment:
-      - APP_NAME=Learning Analytics Microservice
-      - APP_ENV=production
-      - LOG_LEVEL=INFO
-      - DATABASE_URL=postgresql+asyncpg://maxemo:maxemo_secret@postgres:5432/learning_analytics
+    env_file:
+      - .env
     depends_on:
       postgres:
         condition: service_healthy
@@ -20,16 +17,14 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: maxemo_postgres
-    environment:
-      POSTGRES_USER: maxemo
-      POSTGRES_PASSWORD: maxemo_secret
-      POSTGRES_DB: learning_analytics
+    env_file:
+      - .env
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U maxemo -d learning_analytics"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-maxemo} -d $${POSTGRES_DB:-learning_analytics}"]
       interval: 10s
       timeout: 5s
       retries: 5
