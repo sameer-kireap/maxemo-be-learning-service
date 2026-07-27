@@ -1,4 +1,4 @@
-# ⚙️ Engineering Decisions & Strategic Architecture Review
+# Engineering Decisions & Strategic Architecture Review ⚙️
 
 ## Executive Summary
 
@@ -6,7 +6,7 @@ This document provides formal responses to technical assignment review questions
 
 ---
 
-## 1. 🗄️ Database Design & Data Access Strategy
+## 1. Database Design & Data Access Strategy 🗄️
 
 ### Key Architectural Choices
 
@@ -44,7 +44,7 @@ This document provides formal responses to technical assignment review questions
 
 ---
 
-## 2. 🧱 What Was Intentionally Not Built
+## 2. What Was Intentionally Not Built 🧱
 
 To deliver a production-grade microservice within a 2-day timeframe without over-engineering:
 

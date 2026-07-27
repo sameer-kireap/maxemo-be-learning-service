@@ -1,4 +1,4 @@
-# 📅 Product Requirement Changes Architecture: 30-Day Exam Scenario
+# Product Requirement Changes Architecture: 30-Day Exam Scenario 📅
 
 ## Executive Overview
 
@@ -8,7 +8,7 @@ This document details the architectural impact, database schema additions, mathe
 
 ---
 
-## 1. 🔍 Scenario & Product Analysis
+## 1. Scenario & Product Analysis 🔍
 
 When an exam is $\le 30$ days away, learner behavior and pedagogical needs shift:
 
@@ -18,7 +18,7 @@ When an exam is $\le 30$ days away, learner behavior and pedagogical needs shift
 
 ---
 
-## 2. 🗄️ Database Schema Changes
+## 2. Database Schema Changes 🗄️
 
 To support learner exam schedules and exam-topic high-yield weightings, two new tables are introduced into `learning_schema`:
 
@@ -53,7 +53,7 @@ CREATE TABLE learning_schema.exam_topic_weights (
 
 ---
 
-## 3. 📐 Mathematical Scoring Algorithm Changes
+## 3. Mathematical Scoring Algorithm Changes 📐
 
 The topic priority scoring algorithm transitions from pure accuracy ranking to an **Urgency-Weighted Priority Score**:
 
@@ -71,7 +71,7 @@ Topics with the **highest `PriorityScore`** are recommended first.
 
 ---
 
-## 4. 🚀 Phased Implementation Roadmap & Priorities
+## 4. Phased Implementation Roadmap & Priorities 🚀
 
 To deliver this feature safely in production without disrupting active learners:
 

@@ -1,4 +1,4 @@
-# 📈 Scalability & Production Readiness Architecture
+# Scalability & Production Readiness Architecture 📈
 
 ## Executive Summary
 
@@ -6,7 +6,7 @@ This document analyzes system performance throughput, identifies theoretical sca
 
 ---
 
-## 1. ⚡ System Scaling Capabilities & Baseline Performance
+## 1. System Scaling Capabilities & Baseline Performance ⚡
 
 | Metric | Current Baseline (Single Node) | Target Scale (Horizontal Cluster) |
 |---|---|---|
@@ -17,7 +17,7 @@ This document analyzes system performance throughput, identifies theoretical sca
 
 ---
 
-## 2. 🚦 Bottleneck Analysis & Remediation Roadmap
+## 2. Bottleneck Analysis & Remediation Roadmap 🚦
 
 ```mermaid
 graph TD
@@ -69,7 +69,7 @@ graph TD
 
 ---
 
-## 3. 🗄️ Database Table Partitioning Strategy
+## 3. Database Table Partitioning Strategy 🗄️
 
 When `learning_schema.question_attempts` exceeds **10,000,000 records**, the table is partitioned using **PostgreSQL Declarative Hash Partitioning**:
 
@@ -93,7 +93,7 @@ FOR VALUES WITH (MODULUS 16, REMAINDER 0);
 
 ---
 
-## 4. ⚡ Caching Architecture (Redis)
+## 4. Caching Architecture (Redis) ⚡
 
 ```mermaid
 sequenceDiagram
@@ -118,7 +118,7 @@ sequenceDiagram
 
 ---
 
-## 5. 📊 Observability, Metrics & Monitoring
+## 5. Observability, Metrics & Monitoring 📊
 
 For production operations, the application integrates Prometheus metrics via `starlette-prometheus` and OpenTelemetry tracing:
 

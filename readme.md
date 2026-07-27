@@ -12,25 +12,25 @@ The service manages medical clinical topics (*Cardiology*, *Renal Pathology*, *P
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents 📋
 
-1. [Architecture & System Design](#1-architecture--system-design)
-2. [Domain Models & Relationships](#2-domain-models--relationships)
-3. [API Endpoints](#3-api-endpoints)
-4. [Personalized Topic Revision Algorithm](#4-personalized-topic-revision-algorithm)
-5. [Engineering Decisions & Trade-Offs](#5-engineering-decisions--trade-offs)
-6. [Strategic Product Roadmap](#6-strategic-product-roadmap)
-7. [Product Requirement Changes: 30-Day Exam Scenario](#7-product-requirement-changes-30-day-exam-scenario)
-8. [Scale Scenario: 10M Attempts Scaling Strategy](#8-scale-scenario-10m-attempts-scaling-strategy)
-9. [Quick Start & Local Setup](#9-quick-start--local-setup)
-10. [Docker Deployment](#10-docker-deployment)
-11. [Testing & Quality Assurance](#11-testing--quality-assurance)
-12. [Architectural Decision Records (ADRs)](#12-architectural-decision-records-adrs)
-13. [AI Tools Used](#13-ai-tools-used)
+1. [Architecture & System Design](#1-architecture--system-design-)
+2. [Domain Models & Relationships](#2-domain-models--relationships-)
+3. [API Endpoints](#3-api-endpoints-)
+4. [Personalized Topic Revision Algorithm](#4-personalized-topic-revision-algorithm-)
+5. [Engineering Decisions & Trade-Offs](#5-engineering-decisions--trade-offs-)
+6. [Strategic Product Roadmap](#6-strategic-product-roadmap-)
+7. [Product Requirement Changes: 30-Day Exam Scenario](#7-product-requirement-changes-30-day-exam-scenario-)
+8. [Scale Scenario: 10M Attempts Scaling Strategy](#8-scale-scenario-10m-attempts-scaling-strategy-)
+9. [Quick Start & Local Setup](#9-quick-start--local-setup-)
+10. [Docker Deployment](#10-docker-deployment-)
+11. [Testing & Quality Assurance](#11-testing--quality-assurance-)
+12. [Architectural Decision Records (ADRs)](#12-architectural-decision-records-adrs-)
+13. [AI Tools Used](#13-ai-tools-used-)
 
 ---
 
-## 1. 🏗️ Architecture & System Design
+## 1. Architecture & System Design 🏗️
 
 > 📖 **Full Architecture Specification**: For complete layer topology diagrams, execution sequence diagrams, and dependency injection graphs, see **[`ARCHITECTURE.md`](./docs/ARCHITECTURE.md)**.
 
@@ -48,7 +48,7 @@ The microservice is constructed using **Clean Layered Architecture** and strict 
 
 ---
 
-## 2. 🗄️ Domain Models & Relationships
+## 2. Domain Models & Relationships 🗄️
 
 > 📖 **Full Database Specification**: For complete ER diagrams, table schemas, foreign key constraints, indexes, and SQL query patterns, see **[`DATABASE.md`](./docs/DATABASE.md)**.
 
@@ -64,7 +64,7 @@ The data model is implemented in PostgreSQL inside an isolated schema (**`learni
 
 ---
 
-## 3. 🔌 API Endpoints
+## 3. API Endpoints 🔌
 
 > 📖 **Full API Specification**: For complete REST contracts, JSON payloads, query parameters, validation rules, and status code mappings, see **[`API_DESIGN.md`](./docs/API_DESIGN.md)**.
 
@@ -84,7 +84,7 @@ All endpoints return a standardized JSON envelope (`APIResponse[T]`):
 
 ---
 
-## 4. 📐 Personalized Topic Revision Algorithm
+## 4. Personalized Topic Revision Algorithm 📐
 
 > 📖 **Complete Specification Document**: For the full decision tree diagram, real-world case breakdowns, and mathematical proof, see **[`REVISION_ALGORITHM.md`](./docs/REVISION_ALGORITHM.md)**.
 
@@ -110,7 +110,7 @@ $$\text{TopicScore}(t) = W_{\text{acc}} \cdot S_{\text{acc}}(t) + W_{\text{err}}
 
 ---
 
-## 5. ⚙️ Engineering Decisions & Trade-Offs
+## 5. Engineering Decisions & Trade-Offs ⚙️
 
 > 📖 **Full Engineering Decisions Review**: For complete senior engineering architectural justifications, see **[`ENGINEERING_DECISIONS.md`](./docs/ENGINEERING_DECISIONS.md)**.
 
@@ -128,9 +128,9 @@ $$\text{TopicScore}(t) = W_{\text{acc}} \cdot S_{\text{acc}}(t) + W_{\text{err}}
 
 ---
 
-## 6. 🚀 Strategic Product Roadmap
+## 6. Strategic Product Roadmap 🚀
 
-> 📖 **Full CPO Product Review**: For complete feature impact analyses, clinical learning value justifications, and technical implementation feasibility, see **[`PRODUCT_ROADMAP.md`](./docs/PRODUCT_ROADMAP.md)**.
+> 📖 **Full Product Review**: For complete feature impact analyses, clinical learning value justifications, and technical implementation feasibility, see **[`PRODUCT_ROADMAP.md`](./docs/PRODUCT_ROADMAP.md)**.
 
 Evaluating a real-world medical clinical education platform with active daily learners, the following **5 realistic, feasible, and high-impact features** are recommended to drive learner retention and exam success:
 
@@ -146,7 +146,7 @@ Evaluating a real-world medical clinical education platform with active daily le
 
 ---
 
-## 7. 📅 Product Requirement Changes: 30-Day Exam Scenario
+## 7. Product Requirement Changes: 30-Day Exam Scenario 📅
 
 > 📖 **Full Technical Architecture**: For complete SQL table definitions, urgency weighting formulas, and Alembic rollout strategy, see **[`PRODUCT_REQUIREMENT_CHANGES.md`](./docs/PRODUCT_REQUIREMENT_CHANGES.md)**.
 
@@ -173,7 +173,7 @@ Learners within 30 days of an exam need **High-Yield Exam Topic Weighting** and 
 
 ---
 
-## 8. 📈 Scale Scenario: 10M Attempts Scaling Strategy
+## 8. Scale Scenario: 10M Attempts Scaling Strategy 📈
 
 > 📖 **Full Scalability Architecture**: For complete throughput benchmarks, Redis caching sequence diagrams, and metric alerts, see **[`SCALABILITY.md`](./docs/SCALABILITY.md)**.
 
@@ -190,7 +190,7 @@ Learners within 30 days of an exam need **High-Yield Exam Topic Weighting** and 
 
 ---
 
-## 9. 🚀 Quick Start & Local Setup
+## 9. Quick Start & Local Setup 🚀
 
 ### Prerequisites
 
@@ -225,7 +225,7 @@ OpenAPI documentation is available at: **`http://localhost:8000/docs`**
 
 ---
 
-## 10. 🐳 Docker Deployment
+## 10. Docker Deployment 🐳
 
 Deploy the entire production stack (FastAPI App + PostgreSQL + Automated Migrations) with one command:
 
@@ -240,7 +240,7 @@ docker compose up -d --build
 
 ---
 
-## 11. 🧪 Testing & Quality Assurance
+## 11. Testing & Quality Assurance 🧪
 
 > 📖 **Full Testing Architecture**: For complete test isolation fixtures, mock session injection, and full 16-test suite catalog, see **[`TESTING.md`](./docs/TESTING.md)**.
 
@@ -265,7 +265,7 @@ All 16 integration and unit tests pass cleanly in **< 1.0 second**.
 
 ---
 
-## 12. 📜 Architectural Decision Records (ADRs)
+## 12. Architectural Decision Records (ADRs) 📜
 
 > 📖 **Full Decision Records Log**: For complete rationale, considered options, pros/cons, and trade-offs of all 8 formal architectural decisions, see **[`DECISIONS.md`](./docs/DECISIONS.md)**.
 
@@ -282,7 +282,7 @@ Formal decision records documented in the project repository:
 
 ---
 
-## 13. 🤖 AI Tools Used
+## 13. AI Tools Used 🤖
 
 This project was developed with assistance from **Antigravity AI**:
 

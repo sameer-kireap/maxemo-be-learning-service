@@ -1,4 +1,4 @@
-# 📜 Architectural Decision Records (ADRs)
+# Architectural Decision Records (ADRs) 📜
 
 ## Executive Summary
 
@@ -6,7 +6,7 @@ This document formally records all key architectural and engineering decisions m
 
 ---
 
-## 📋 Decision Index
+## Decision Index 📋
 
 1. [ADR-001: Choice of Clean Architecture Layered Structure](#adr-001-choice-of-clean-architecture-layered-structure)
 2. [ADR-002: Choice of Generic Repository Pattern & QueryBuilder](#adr-002-choice-of-generic-repository-pattern--querybuilder)

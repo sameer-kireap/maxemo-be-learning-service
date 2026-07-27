@@ -1,4 +1,4 @@
-# 🔌 API Design Specification & OpenAPI Standard
+# API Design Specification & OpenAPI Standard 🔌
 
 ## Executive Summary
 
@@ -8,7 +8,7 @@ OpenAPI 3.1 documentation is generated automatically at `/docs`.
 
 ---
 
-## 1. 📦 Global Response Envelope Format
+## 1. Global Response Envelope Format 📦
 
 All endpoints wrap their JSON payloads in a uniform response envelope (`APIResponse[T]` defined in `app/schema/response.py`).
 
@@ -40,7 +40,7 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
 
 ---
 
-## 2. 🚦 HTTP Status Code Conventions
+## 2. HTTP Status Code Conventions 🚦
 
 | HTTP Status Code | Scenario |
 |---|---|
@@ -53,7 +53,7 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
 
 ---
 
-## 3. 🛠️ Detailed Endpoint Specifications
+## 3. Detailed Endpoint Specifications 🛠️
 
 ### A. Health Check API
 

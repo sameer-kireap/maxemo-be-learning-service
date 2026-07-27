@@ -1,4 +1,4 @@
-# Architecture & System Design Documentation
+# Architecture & System Design Documentation 🏗️
 
 ## Executive Overview
 
@@ -8,7 +8,7 @@ The core philosophy centers on **strict separation of concerns**, **unidirection
 
 ---
 
-## 1. Clean Architecture Layers
+## 1. Clean Architecture Layers 🏛️
 
 ```mermaid
 graph TD
@@ -63,7 +63,7 @@ graph TD
 
 ---
 
-## 2. Request & Execution Lifecycle
+## 2. Request & Execution Lifecycle 🔄
 
 The sequence diagram below traces an incoming HTTP submission (`POST /api/v1/attempts`) through all layers of the system:
 
@@ -108,7 +108,7 @@ sequenceDiagram
 
 ---
 
-## 3. Dependency Flow & Modular Inversion of Control
+## 3. Dependency Flow & Modular Inversion of Control 🧩
 
 To avoid **circular imports** in Python microservices, dependencies are organized into domain-isolated modules under `app/dependencies/`:
 
@@ -128,7 +128,7 @@ app/dependencies/
 
 ---
 
-## 4. Error & Exception Handling Architecture
+## 4. Error & Exception Handling Architecture ⚠️
 
 The application enforces a centralized, 3-pronged exception handling system registered in `app/exception/handler.py`. All domain exceptions derive from `CustomException` (`app/exception/base.py`), ensuring standard error payloads without leaking raw internal stack traces.
 
@@ -164,7 +164,7 @@ graph TD
 
 ---
 
-## 5. Configuration & Environment Management
+## 5. Configuration & Environment Management ⚙️
 
 Configuration management is powered by `pydantic-settings` in `app/core/config.py`:
 
@@ -174,7 +174,7 @@ Configuration management is powered by `pydantic-settings` in `app/core/config.p
 
 ---
 
-## 6. Architectural Trade-Offs & Scaling Analysis
+## 6. Architectural Trade-Offs & Scaling Analysis ⚖️
 
 | Decision | Pros | Cons | Mitigation / Evolution |
 |---|---|---|---|

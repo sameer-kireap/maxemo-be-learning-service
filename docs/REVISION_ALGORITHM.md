@@ -1,4 +1,4 @@
-# 📐 Production Topic Revision Recommendation Engine
+# Production Topic Revision Recommendation Engine 📐
 
 ## Executive Overview
 
@@ -10,7 +10,7 @@ Each recommendation includes a 1-indexed `priority` rank, accuracy metrics, and 
 
 ---
 
-## 1. 🔢 Mathematical Scoring Formula
+## 1. Mathematical Scoring Formula 🔢
 
 For each topic $t \in T$ in the system, the algorithm calculates a dynamic **Priority Score** $\mathcal{S}(t)$:
 
@@ -23,7 +23,7 @@ Where:
 
 ---
 
-## 2. 🌲 Decision Tree & Priority Case Classifications
+## 2. Decision Tree & Priority Case Classifications 🌲
 
 The engine evaluates 4 critical real-world learning scenarios to assign priority scores and explainable reasons:
 
@@ -46,7 +46,7 @@ graph TD
 
 ---
 
-## 3. 🎯 The 4 Key Real-World Scenarios
+## 3. The 4 Key Real-World Scenarios 🎯
 
 ### Case 1: Low Accuracy Scenario (Critical Knowledge Gap)
 
@@ -92,7 +92,7 @@ graph TD
 
 ---
 
-## 4. 📦 Complete Realistic API Response Payload
+## 4. Complete Realistic API Response Payload 📦
 
 #### Endpoint: `GET /api/v1/users/123/revision?limit=5`
 
@@ -161,7 +161,7 @@ graph TD
 
 ---
 
-## 5. ⚡ Algorithmic Complexity & SQL Aggregation
+## 5. Algorithmic Complexity & SQL Aggregation ⚡
 
 ### Database Query Implementation (`AttemptRepository`)
 Raw performance aggregates per topic are retrieved in a single SQL join query:

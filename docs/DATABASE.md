@@ -1,4 +1,4 @@
-# 🗄️ Database Architecture & Schema Documentation
+# Database Architecture & Schema Documentation 🗄️
 
 ## Executive Summary
 
@@ -8,7 +8,7 @@ The schema supports full ACID compliance, relational integrity, server-enforced 
 
 ---
 
-## 1. 📐 Entity-Relationship (ER) Diagram
+## 1. Entity-Relationship (ER) Diagram 📐
 
 ```mermaid
 erDiagram
@@ -58,7 +58,7 @@ erDiagram
 
 ---
 
-## 2. 📋 Table Specifications & Constraints
+## 2. Table Specifications & Constraints 📋
 
 ### A. Table: `learning_schema.topics`
 Stores high-level subject categories (e.g. "Cardiology", "Neurology").
@@ -111,7 +111,7 @@ Records every learner response attempt for analytical scoring and revision engin
 
 ---
 
-## 3. 🔍 Database Indexing Strategy
+## 3. Database Indexing Strategy 🔍
 
 To support high-throughput read/write workloads, explicit database indexes have been applied:
 
@@ -152,7 +152,7 @@ ON learning_schema.question_attempts (user_id, question_id, is_correct);
 
 ---
 
-## 4. ⚡ Primary Query Patterns & Execution Performance
+## 4. Primary Query Patterns & Execution Performance ⚡
 
 ### A. Single-Query Window Count Pagination Query
 Executed by `BaseRepository.list_generic`:
@@ -181,7 +181,7 @@ WHERE user_id = 101;
 
 ---
 
-## 5. 📈 Expected Bottlenecks & Database Scaling Strategy
+## 5. Expected Bottlenecks & Database Scaling Strategy 📈
 
 ### Identified Bottleneck
 As `question_attempts` grows beyond **10,000,000+ rows**, calculating `COUNT()` and `SUM()` aggregates on-the-fly for active users will increase DB CPU consumption.
