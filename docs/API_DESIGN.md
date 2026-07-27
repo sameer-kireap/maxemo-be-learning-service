@@ -1,16 +1,19 @@
-# API Design Specification & OpenAPI Standard
+# 🔌 API Design Specification & OpenAPI Standard
 
 ## Executive Summary
 
-The API presentation layer is built following **RESTful standards**, returning standardized JSON envelopes for all success and error responses. OpenAPI 3.1 documentation is generated automatically at `/docs`.
+The API presentation layer is built following **RESTful standards**, returning standardized JSON envelopes for all success and error responses. 
+
+OpenAPI 3.1 documentation is generated automatically at `/docs`.
 
 ---
 
-## 1. Global Response Envelope Format
+## 1. 📦 Global Response Envelope Format
 
 All endpoints wrap their JSON payloads in a uniform response envelope (`APIResponse[T]` defined in `app/schema/response.py`).
 
 ### Success Response Envelope (`200 OK`, `201 Created`)
+
 ```json
 {
   "success": true,
@@ -21,6 +24,7 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
 ```
 
 ### Error Response Envelope (`400`, `404`, `409`, `500`)
+
 ```json
 {
   "success": false,
@@ -36,7 +40,7 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
 
 ---
 
-## 2. HTTP Status Code Conventions
+## 2. 🚦 HTTP Status Code Conventions
 
 | HTTP Status Code | Scenario |
 |---|---|
@@ -49,11 +53,12 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
 
 ---
 
-## 3. Detailed Endpoint Specifications
+## 3. 🛠️ Detailed Endpoint Specifications
 
 ### A. Health Check API
 
 #### `GET /health` (Unversioned Root Endpoint)
+
 - **Summary**: Microservice health and status check.
 - **Response `200 OK`**:
   ```json
@@ -74,6 +79,7 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
 ### B. Topics API (`/api/v1/topics`)
 
 #### `POST /api/v1/topics`
+
 - **Summary**: Create a new learning topic (e.g., *Cardiology*, *Renal Pathology*).
 - **Request Body (`TopicCreate`)**:
   ```json
@@ -98,6 +104,7 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
 - **Error Response `409 Conflict`**: If topic with exact name already exists (`TOPIC_ALREADY_EXISTS`).
 
 #### `GET /api/v1/topics`
+
 - **Summary**: List topics with single-query window count (`COUNT(*) OVER()`), filtering, search, and type-safe sorting.
 - **Query Parameters**:
   - `offset` (int, default: 0)
@@ -111,6 +118,7 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
 ### C. Questions API (`/api/v1/questions`)
 
 #### `POST /api/v1/questions`
+
 - **Summary**: Create a new clinical multiple-choice question.
 - **Request Body (`QuestionCreate`)**:
   ```json
@@ -125,6 +133,7 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
 - **Validation Rules**: `correct_option_index` must be within `0 <= index < len(options)`.
 
 #### `GET /api/v1/questions/{question_id}` (Learner View)
+
 - **Security Rule**: Excludes `correct_option_index` from payload to prevent client-side answer cheating.
 - **Response `200 OK`**:
   ```json
@@ -145,6 +154,7 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
   ```
 
 #### `GET /api/v1/questions/practice` (Practice Mode)
+
 - **Query Parameters**:
   - `topic_ids` (list of UUIDs): Filter practice questions by topics.
   - `limit` (int, default: 10): Number of practice questions to fetch.
@@ -154,6 +164,7 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
 ### D. Attempts & Analytics API (`/api/v1/attempts`, `/api/v1/users`)
 
 #### `POST /api/v1/attempts`
+
 - **Summary**: Record a learner's question attempt.
 - **Server-Side Derived Correctness**: Payload contains `selected_option_index` and `time_taken_seconds`. Server compares `selected_option_index == question.correct_option_index` to compute `is_correct`, eliminating client-side score spoofing.
 - **Request Body (`AttemptSubmit`)**:
@@ -186,6 +197,7 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
 ---
 
 #### `GET /api/v1/users/{user_id}/performance`
+
 - **Summary**: Get learner performance summary and per-topic breakdown calculated dynamically via database query aggregates.
 - **Response `200 OK`**:
   ```json
@@ -222,6 +234,7 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
 ---
 
 #### `GET /api/v1/users/{user_id}/revision`
+
 - **Summary**: Get personalized topic revision queue (recommends top ~5 weak topics to revise next with priority ranks and explainable human reasons).
 - **Query Parameters**: `limit` (int, default: 5)
 - **Response `200 OK`**:
@@ -261,11 +274,13 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
 ---
 
 #### `GET /api/v1/users/{user_id}/revision/questions`
+
 - **Summary**: Get specific weak questions recommended for targeted practice based on historical learner accuracy.
 - **Query Parameters**: `limit` (int, default: 10)
 
 ---
 
 #### `GET /api/v1/users/{user_id}/attempts`
+
 - **Summary**: List a learner's historical attempts with pagination.
 - **Query Parameters**: `offset` (default: 0), `limit` (default: 20), `sort_by` (`created_at`), `sort_order` (`asc`/`desc`).

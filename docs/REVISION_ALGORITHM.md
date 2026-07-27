@@ -1,14 +1,16 @@
-# Production Topic Revision Recommendation Engine
+# 📐 Production Topic Revision Recommendation Engine
 
 ## Executive Overview
 
 In medical clinical education (e.g., USMLE, MedEd, board exams), effective revision requires prioritizing **topic-level knowledge gaps**, **repeated errors**, and **memory decay**.
 
-The **Personalized Revision Recommendation Engine** (`GET /api/v1/users/{user_id}/revision`) calculates a dynamic, explainable revision queue of the **top ~5 topics** a learner should revise next. Each recommendation includes a 1-indexed `priority` rank, accuracy metrics, and a human-readable `reason` string explaining why the topic was selected.
+The **Personalized Revision Recommendation Engine** (`GET /api/v1/users/{user_id}/revision`) calculates a dynamic, explainable revision queue of the **top ~5 topics** a learner should revise next. 
+
+Each recommendation includes a 1-indexed `priority` rank, accuracy metrics, and a human-readable `reason` string explaining why the topic was selected.
 
 ---
 
-## 1. Mathematical Scoring Formula
+## 1. 🔢 Mathematical Scoring Formula
 
 For each topic $t \in T$ in the system, the algorithm calculates a dynamic **Priority Score** $\mathcal{S}(t)$:
 
@@ -21,7 +23,7 @@ Where:
 
 ---
 
-## 2. Decision Tree & Priority Case Classifications
+## 2. 🌲 Decision Tree & Priority Case Classifications
 
 The engine evaluates 4 critical real-world learning scenarios to assign priority scores and explainable reasons:
 
@@ -44,9 +46,10 @@ graph TD
 
 ---
 
-## 3. The 4 Key Real-World Scenarios
+## 3. 🎯 The 4 Key Real-World Scenarios
 
 ### Case 1: Low Accuracy Scenario (Critical Knowledge Gap)
+
 - **Condition**: Learner accuracy on topic is below 50%.
 - **Example**: *Renal Pathology* — 12 total attempts, 4 correct (33.3% accuracy, 8 errors).
 - **Calculated Score**:
@@ -57,6 +60,7 @@ graph TD
 ---
 
 ### Case 2: Repeated Incorrect Attempts Scenario (Struggling Concept)
+
 - **Condition**: Accuracy $\ge 50\%$, but learner has made 3 or more errors on this topic.
 - **Example**: *Microbiology* — 10 total attempts, 5 correct (50.0% accuracy, 5 errors).
 - **Calculated Score**:
@@ -67,6 +71,7 @@ graph TD
 ---
 
 ### Case 3: Cold Start / Unattempted Topic Scenario (Unexplored Knowledge)
+
 - **Condition**: Topic exists in curriculum, but learner has 0 attempts recorded.
 - **Example**: *Endocrinology* — 0 attempts.
 - **Calculated Score**:
@@ -77,6 +82,7 @@ graph TD
 ---
 
 ### Case 4: Time-Decay / Forgetting Curve Scenario (Memory Decay)
+
 - **Condition**: Learner had high accuracy in past, but has not practiced topic for $\ge 14$ days.
 - **Example**: *Pharmacology* — 20 attempts, 18 correct (90.0% accuracy), last review 21 days ago.
 - **Calculated Score**:
@@ -86,7 +92,7 @@ graph TD
 
 ---
 
-## 4. Complete Realistic API Response Payload
+## 4. 📦 Complete Realistic API Response Payload
 
 #### Endpoint: `GET /api/v1/users/123/revision?limit=5`
 
@@ -155,7 +161,7 @@ graph TD
 
 ---
 
-## 5. Algorithmic Complexity & SQL Aggregation
+## 5. ⚡ Algorithmic Complexity & SQL Aggregation
 
 ### Database Query Implementation (`AttemptRepository`)
 Raw performance aggregates per topic are retrieved in a single SQL join query:
@@ -176,6 +182,7 @@ GROUP BY t.id, t.name;
 ```
 
 ### Complexity Breakdown
+
 - **SQL Aggregation Time Complexity**: $O(\log N + M)$ using index `ix_attempts_user_question_correct (user_id, question_id, is_correct)`.
 - **Python Ranking Time Complexity**: $O(K \log K)$ where $K$ is the number of system topics (typically $< 100$).
 - **Total Execution Time**: **< 3 milliseconds**.

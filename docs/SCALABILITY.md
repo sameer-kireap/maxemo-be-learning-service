@@ -1,4 +1,4 @@
-# Scalability & Production Readiness Architecture
+# 📈 Scalability & Production Readiness Architecture
 
 ## Executive Summary
 
@@ -6,7 +6,7 @@ This document analyzes system performance throughput, identifies theoretical sca
 
 ---
 
-## 1. System Scaling Capabilities & Baseline Performance
+## 1. ⚡ System Scaling Capabilities & Baseline Performance
 
 | Metric | Current Baseline (Single Node) | Target Scale (Horizontal Cluster) |
 |---|---|---|
@@ -17,7 +17,7 @@ This document analyzes system performance throughput, identifies theoretical sca
 
 ---
 
-## 2. Bottleneck Analysis & Remediation Roadmap
+## 2. 🚦 Bottleneck Analysis & Remediation Roadmap
 
 ```mermaid
 graph TD
@@ -35,31 +35,41 @@ graph TD
 ```
 
 ### Identified Bottleneck 1: Database Aggregation Read Overhead
+
 - **Symptom**: High CPU usage on primary PostgreSQL instance when thousands of concurrent users request `/api/v1/users/{id}/performance`.
 - **Remediation**:
   1. Implement **Redis In-Memory Cache** for user performance summaries with a 60-second TTL.
   2. Implement **PostgreSQL Read Replicas**. Route all read endpoints (`GET /topics`, `GET /questions`, `GET /attempts`) to Read Replicas using SQLAlchemy engine routing.
 
+---
+
 ### Identified Bottleneck 2: Write Lock Contention on Attempts Table
+
 - **Symptom**: High write latency when 10,000+ learners submit answers simultaneously.
 - **Remediation**:
   1. Introduce **Kafka / RabbitMQ** message broker for asynchronous attempt writes.
   2. API Handler pushes attempt payload to Kafka topic `learner-attempts` in < 2ms and returns immediate HTTP response.
   3. Consumer background workers batch insert attempts into PostgreSQL in chunks of 500 records.
 
+---
+
 ### Identified Bottleneck 3: Deep B-Tree Scans on 10M+ Row Attempts Table
+
 - **Symptom**: Linear B-Tree index depths increase as attempt records exceed 10M+, slowing single-query lookups.
 - **Remediation**:
   1. **Declarative Hash Partitioning**: Partition `learning_schema.question_attempts` by `HASH(user_id)` across 16 database partitions.
 
+---
+
 ### Identified Bottleneck 4: Database Connection Pool Starvation
+
 - **Symptom**: Concurrent client HTTP requests exhaust PostgreSQL maximum connection limits, resulting in connection timeout errors.
 - **Remediation**:
   1. Deploy **PgBouncer** connection pooler in transaction pooling mode to scale up to 5,000+ active client connections.
 
 ---
 
-## 3. Database Table Partitioning Strategy
+## 3. 🗄️ Database Table Partitioning Strategy
 
 When `learning_schema.question_attempts` exceeds **10,000,000 records**, the table is partitioned using **PostgreSQL Declarative Hash Partitioning**:
 
@@ -83,7 +93,7 @@ FOR VALUES WITH (MODULUS 16, REMAINDER 0);
 
 ---
 
-## 4. Caching Architecture (Redis)
+## 4. ⚡ Caching Architecture (Redis)
 
 ```mermaid
 sequenceDiagram
@@ -108,11 +118,12 @@ sequenceDiagram
 
 ---
 
-## 5. Observability, Metrics & Monitoring
+## 5. 📊 Observability, Metrics & Monitoring
 
 For production operations, the application integrates Prometheus metrics via `starlette-prometheus` and OpenTelemetry tracing:
 
 ### Key Metrics to Monitor
+
 1. **`http_requests_total`**: Total request count partitioned by status code (`2xx`, `4xx`, `5xx`).
 2. **`http_request_duration_seconds`**: Latency histogram (P50, P95, P99).
 3. **`db_connection_pool_size`**: Active vs. idle connections in `asyncpg` pool.

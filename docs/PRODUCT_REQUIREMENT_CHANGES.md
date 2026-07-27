@@ -1,22 +1,24 @@
-# Product Requirement Changes Architecture: 30-Day Exam Scenario
+# 📅 Product Requirement Changes Architecture: 30-Day Exam Scenario
 
 ## Executive Overview
 
 This document details the architectural impact, database schema additions, mathematical algorithm adjustments, and migration strategy required to adapt the Maxemo Learning Analytics Service to the following evolving product requirement:
 
-> **Product Requirement Change**: *"Learners preparing for an exam in the next 30 days should receive different recommendations from learners whose exam is six months away."*
+> 💡 **Product Requirement Change**: *"Learners preparing for an exam in the next 30 days should receive different recommendations from learners whose exam is six months away."*
 
 ---
 
-## 1. Scenario & Product Analysis
+## 1. 🔍 Scenario & Product Analysis
 
 When an exam is $\le 30$ days away, learner behavior and pedagogical needs shift:
+
 - **General Weak Point Practice $\rightarrow$ High-Yield Exam Focus**: Learners can no longer afford to review all historical weak topics broadly. The recommendation engine must prioritize topics heavily weighted on their specific upcoming exam.
+
 - **Urgency Time-Decay Weighting**: Topics with low accuracy on high-yield exam categories must receive massive priority multipliers as $\text{DaysToExam} \to 0$.
 
 ---
 
-## 2. Database Schema Changes
+## 2. 🗄️ Database Schema Changes
 
 To support learner exam schedules and exam-topic high-yield weightings, two new tables are introduced into `learning_schema`:
 
@@ -44,13 +46,14 @@ CREATE TABLE learning_schema.exam_topic_weights (
 );
 ```
 
-### Table Definitions & Purpose:
+### Table Definitions & Purpose
+
 - **`user_exams`**: Tracks when a learner is taking a specific board or clinical exam (e.g. *USMLE Step 1* on *2026-08-25*).
 - **`exam_topic_weights`**: Maps high-yield multipliers per exam topic (e.g. *Cardiology* has a $2.0\times$ weight for USMLE Step 1).
 
 ---
 
-## 3. Mathematical Scoring Algorithm Changes
+## 3. 📐 Mathematical Scoring Algorithm Changes
 
 The topic priority scoring algorithm transitions from pure accuracy ranking to an **Urgency-Weighted Priority Score**:
 
@@ -68,7 +71,7 @@ Topics with the **highest `PriorityScore`** are recommended first.
 
 ---
 
-## 4. Phased Implementation Roadmap & Priorities
+## 4. 🚀 Phased Implementation Roadmap & Priorities
 
 To deliver this feature safely in production without disrupting active learners:
 

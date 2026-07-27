@@ -1,10 +1,12 @@
-# Engineering Decisions & Strategic Architecture Review
+# ⚙️ Engineering Decisions & Strategic Architecture Review
+
+## Executive Summary
 
 This document provides formal responses to technical assignment review questions from a Senior/Principal Engineer perspective.
 
 ---
 
-## 1. Database Design & Data Access Strategy
+## 1. 🗄️ Database Design & Data Access Strategy
 
 ### Key Architectural Choices
 
@@ -36,15 +38,18 @@ This document provides formal responses to technical assignment review questions
 
 - **Composite B-Tree Index `ix_attempts_user_question_correct (user_id, question_id, is_correct)`**:
   Enables index-only scans for user performance calculations (`GET /users/{id}/performance`) and revision recommendations without scanning table heap pages.
+
 - **Single-Column B-Tree Indexes**:
   Applied on `topics.name` (Unique), `questions.difficulty`, `question_attempts.user_id`, `question_attempts.question_id`, and `question_attempts.created_at DESC`.
 
 ---
 
-## 2. What Was Intentionally Not Built
+## 2. 🧱 What Was Intentionally Not Built
 
 To deliver a production-grade microservice within a 2-day timeframe without over-engineering:
 
 1. **Redis Caching Layer**: Avoided cache invalidation complexity in Phase 1. PostgreSQL B-Tree indexes serve queries in < 5ms.
+
 2. **Asynchronous Message Queue (Kafka/RabbitMQ)**: Direct HTTP writes to PostgreSQL provide instant `is_correct` feedback in the response body.
+
 3. **Complex User Auth / JWT Decoding**: The API accepts `user_id` in paths and payloads, decoupling authorization from domain learning logic.

@@ -1,12 +1,14 @@
-# Database Architecture & Schema Documentation
+# 🗄️ Database Architecture & Schema Documentation
 
 ## Executive Summary
 
-The database architecture is designed for **PostgreSQL 16** using the **`learning_schema`** PostgreSQL schema. The schema supports ACID compliance, relational integrity, server-enforced foreign key cascade rules, and optimized index structures for both analytical queries and fast key-value lookups.
+The database architecture is designed for **PostgreSQL 16** using the isolated **`learning_schema`** PostgreSQL schema. 
+
+The schema supports full ACID compliance, relational integrity, server-enforced foreign key cascade rules, and optimized index structures for both analytical queries and fast key-value lookups.
 
 ---
 
-## 1. Entity-Relationship (ER) Diagram
+## 1. 📐 Entity-Relationship (ER) Diagram
 
 ```mermaid
 erDiagram
@@ -56,7 +58,7 @@ erDiagram
 
 ---
 
-## 2. Table Specifications & Constraints
+## 2. 📋 Table Specifications & Constraints
 
 ### A. Table: `learning_schema.topics`
 Stores high-level subject categories (e.g. "Cardiology", "Neurology").
@@ -67,6 +69,8 @@ Stores high-level subject categories (e.g. "Cardiology", "Neurology").
 | `name` | `VARCHAR(255)` | `NOT NULL`, `UNIQUE` | Unique human-readable topic name |
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL`, `DEFAULT NOW()` | Audit timestamp of creation |
 | `updated_at` | `TIMESTAMPTZ` | `NOT NULL`, `DEFAULT NOW()` | Audit timestamp of last update |
+
+---
 
 ### B. Table: `learning_schema.questions`
 Stores clinical multiple-choice questions, options JSON arrays, and difficulty classifications.
@@ -80,6 +84,8 @@ Stores clinical multiple-choice questions, options JSON arrays, and difficulty c
 | `difficulty` | `VARCHAR(50)` | `NOT NULL`, Indexed | Difficulty level (`easy`, `medium`, `hard`) |
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL`, `DEFAULT NOW()` | Audit timestamp of creation |
 
+---
+
 ### C. Table: `learning_schema.question_topics` (Junction Table)
 Many-to-Many join table linking Questions to Topics.
 
@@ -87,6 +93,8 @@ Many-to-Many join table linking Questions to Topics.
 |---|---|---|---|
 | `question_id` | `UUID` | PK, FK -> `questions.id` `ON DELETE CASCADE` | Reference to parent Question |
 | `topic_id` | `UUID` | PK, FK -> `topics.id` `ON DELETE CASCADE` | Reference to parent Topic |
+
+---
 
 ### D. Table: `learning_schema.question_attempts`
 Records every learner response attempt for analytical scoring and revision engine computations.
@@ -103,7 +111,7 @@ Records every learner response attempt for analytical scoring and revision engin
 
 ---
 
-## 3. Database Indexing Strategy
+## 3. 🔍 Database Indexing Strategy
 
 To support high-throughput read/write workloads, explicit database indexes have been applied:
 
@@ -137,12 +145,14 @@ ON learning_schema.question_attempts (user_id, question_id, is_correct);
 ### Why Each Index Exists
 
 1. **`ix_learning_schema_topics_name`**: Ensures duplicate topic creation attempts fail at the database level ($O(1)$ lookup speed).
+
 2. **`ix_learning_schema_questions_difficulty`**: Speeds up filtered pagination queries when filtering questions by `easy`, `medium`, or `hard`.
+
 3. **`ix_attempts_user_question_correct`**: Essential for performance analytics (`GET /api/v1/attempts/users/{id}/performance`) and revision recommendations. Allows PostgreSQL to perform index-only scans when computing user accuracy aggregates without scanning raw table heaps.
 
 ---
 
-## 4. Primary Query Patterns & Execution Performance
+## 4. ⚡ Primary Query Patterns & Execution Performance
 
 ### A. Single-Query Window Count Pagination Query
 Executed by `BaseRepository.list_generic`:
@@ -171,7 +181,7 @@ WHERE user_id = 101;
 
 ---
 
-## 5. Expected Bottlenecks & Database Scaling Strategy
+## 5. 📈 Expected Bottlenecks & Database Scaling Strategy
 
 ### Identified Bottleneck
 As `question_attempts` grows beyond **10,000,000+ rows**, calculating `COUNT()` and `SUM()` aggregates on-the-fly for active users will increase DB CPU consumption.
@@ -179,5 +189,7 @@ As `question_attempts` grows beyond **10,000,000+ rows**, calculating `COUNT()` 
 ### Remediation & Scaling Milestones
 
 1. **Phase 1 (Current - < 1,000,000 rows)**: Direct SQL aggregates utilizing composite B-Tree index `(user_id, question_id, is_correct)`. Response time < 5ms.
+
 2. **Phase 2 (1M - 10M rows)**: PostgreSQL Read Replicas. Direct read queries to replicas to protect primary database write IOPS.
+
 3. **Phase 3 (> 10M rows)**: Declarative Table Partitioning by Range (`created_at` or `user_id` hash partitioning) to keep active query working sets inside RAM buffers.
