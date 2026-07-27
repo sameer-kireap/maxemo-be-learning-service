@@ -28,7 +28,13 @@ class Question(Base, TimestampMixin):
     correct_option_index: Mapped[int] = mapped_column(Integer)
 
     difficulty: Mapped[DifficultyLevel] = mapped_column(
-        Enum(DifficultyLevel, name="difficulty_level", schema=LEARNING_SCHEMA, create_type=True),
+        Enum(
+            DifficultyLevel,
+            name="difficulty_level",
+            schema=LEARNING_SCHEMA,
+            values_callable=lambda x: [e.value for e in x],
+            create_type=False,
+        ),
         default=DifficultyLevel.MEDIUM,
         server_default=DifficultyLevel.MEDIUM.value,
     )
