@@ -1,6 +1,7 @@
 """Attempt repository — pure data access layer."""
 
 import uuid
+from typing import Any
 
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,17 +11,20 @@ from app.model.associations import QuestionTopic
 from app.model.attempt import QuestionAttempt
 from app.model.question import Question
 from app.model.topic import Topic
+from app.repository.base_repository import BaseRepository
+from app.schema.filter import FilterParams
+from app.utils.repository.query_builder import QueryBuilder
 
 
-class AttemptRepository:
+class AttemptRepository(BaseRepository[QuestionAttempt]):
     """Repository for QuestionAttempt persistence operations."""
 
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
+    def __init__(self, db: AsyncSession) -> None:
+        super().__init__(db)
 
     async def create(self, attempt: QuestionAttempt) -> QuestionAttempt:
-        self._session.add(attempt)
-        await self._session.flush()
+        self.db.add(attempt)
+        await self.db.flush()
         return attempt
 
     async def get_by_id(self, attempt_id: uuid.UUID) -> QuestionAttempt | None:
@@ -29,25 +33,34 @@ class AttemptRepository:
             .options(selectinload(QuestionAttempt.question))
             .where(QuestionAttempt.id == attempt_id)
         )
-        result = await self._session.execute(stmt)
+        result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_by_user_id(
-        self, user_id: int, offset: int = 0, limit: int = 100
-    ) -> list[QuestionAttempt]:
-        stmt = (
-            select(QuestionAttempt)
-            .options(selectinload(QuestionAttempt.question))
-            .where(QuestionAttempt.user_id == user_id)
-            .order_by(QuestionAttempt.created_at.desc())
-            .offset(offset)
-            .limit(limit)
-        )
-        result = await self._session.execute(stmt)
-        return list(result.scalars().all())
+    async def list_attempts(
+        self, user_id: int, filter_params: FilterParams
+    ) -> tuple[list[QuestionAttempt], int]:
+        filter_map: dict[str, Any] = {}
+        search_columns: list[Any] = []
+        sort_map: dict[str, Any] = {"created_at": QuestionAttempt.created_at}
+        default_sort: Any = QuestionAttempt.created_at
 
-    async def get_raw_user_performance(self, user_id: int) -> tuple[int, int, float]:
-        """Returns raw tuple: (total_attempts, correct_attempts, total_time_seconds)."""
+        def extra_builder(builder: QueryBuilder, filters: FilterParams) -> QueryBuilder:
+            builder.query = builder.query.where(QuestionAttempt.user_id == user_id)
+            return builder
+
+        return await self.list_generic(
+            filter_params=filter_params,
+            filter_map=filter_map,
+            search_columns=search_columns,
+            sort_map=sort_map,
+            default_sort=default_sort,
+            model=QuestionAttempt,
+            extra_query_builder=extra_builder,
+            options=[selectinload(QuestionAttempt.question)],
+        )
+
+    async def get_raw_user_performance(self, user_id: int) -> Any:  # noqa: ANN401
+        """Returns raw database row aggregate: (total_attempts, correct_attempts, total_time)."""
         stmt = (
             select(
                 func.count(QuestionAttempt.id).label("total_attempts"),
@@ -58,19 +71,11 @@ class AttemptRepository:
             )
             .where(QuestionAttempt.user_id == user_id)
         )
-        result = await self._session.execute(stmt)
-        row = result.one()
+        result = await self.db.execute(stmt)
+        return result.one()
 
-        total = row.total_attempts or 0
-        correct = row.correct_attempts or 0
-        total_time = float(row.total_time_seconds) if row.total_time_seconds else 0.0
-
-        return total, correct, total_time
-
-    async def get_raw_topic_performance(
-        self, user_id: int
-    ) -> list[tuple[uuid.UUID, str, int, int]]:
-        """Returns raw rows: list of (topic_id, topic_name, total_attempts, correct_attempts)."""
+    async def get_raw_topic_performance(self, user_id: int) -> Any:  # noqa: ANN401
+        """Returns raw database rows directly from DB result without transformation."""
         stmt = (
             select(
                 Topic.id.label("topic_id"),
@@ -87,18 +92,8 @@ class AttemptRepository:
             .group_by(Topic.id, Topic.name)
             .order_by(Topic.name.asc())
         )
-        result = await self._session.execute(stmt)
-        rows = result.all()
-
-        return [
-            (
-                row.topic_id,
-                row.topic_name,
-                row.total_attempts or 0,
-                row.correct_attempts or 0,
-            )
-            for row in rows
-        ]
+        result = await self.db.execute(stmt)
+        return result.all()
 
     async def get_incorrect_attempts_by_user(
         self, user_id: int, limit: int = 10
@@ -115,5 +110,5 @@ class AttemptRepository:
             .order_by(QuestionAttempt.created_at.desc())
             .limit(limit)
         )
-        result = await self._session.execute(stmt)
+        result = await self.db.execute(stmt)
         return list(result.scalars().all())

@@ -1,26 +1,29 @@
 """Question repository — pure data access layer."""
 
 import uuid
+from typing import Any
 
 from sqlalchemy import Float, case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.constant.difficulty import DifficultyLevel
 from app.model.associations import QuestionTopic
 from app.model.attempt import QuestionAttempt
 from app.model.question import Question
+from app.repository.base_repository import BaseRepository
+from app.schema.filter import FilterParams
+from app.utils.repository.query_builder import QueryBuilder
 
 
-class QuestionRepository:
+class QuestionRepository(BaseRepository[Question]):
     """Repository for Question persistence operations."""
 
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
+    def __init__(self, db: AsyncSession) -> None:
+        super().__init__(db)
 
     async def create(self, question: Question) -> Question:
-        self._session.add(question)
-        await self._session.flush()
+        self.db.add(question)
+        await self.db.flush()
         return question
 
     async def get_by_id(self, question_id: uuid.UUID) -> Question | None:
@@ -29,27 +32,41 @@ class QuestionRepository:
             .options(selectinload(Question.topics))
             .where(Question.id == question_id)
         )
-        result = await self._session.execute(stmt)
+        result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def list_all(
+    async def list_questions(
         self,
+        filter_params: FilterParams,
         topic_id: uuid.UUID | None = None,
-        difficulty: DifficultyLevel | None = None,
-        offset: int = 0,
-        limit: int = 100,
-    ) -> list[Question]:
-        stmt = select(Question).options(selectinload(Question.topics))
+    ) -> tuple[list[Question], int]:
+        filter_map: dict[str, Any] = {
+            "difficulty": Question.difficulty,
+        }
+        search_columns: list[Any] = [Question.text]
+        sort_map: dict[str, Any] = {
+            "created_at": Question.created_at,
+            "difficulty": Question.difficulty,
+        }
+        default_sort: Any = Question.created_at
 
-        if topic_id is not None:
-            stmt = stmt.join(QuestionTopic).where(QuestionTopic.topic_id == topic_id)
+        def extra_builder(builder: QueryBuilder, filters: FilterParams) -> QueryBuilder:
+            if topic_id is not None:
+                builder.query = builder.query.join(QuestionTopic).where(
+                    QuestionTopic.topic_id == topic_id
+                )
+            return builder
 
-        if difficulty is not None:
-            stmt = stmt.where(Question.difficulty == difficulty)
-
-        stmt = stmt.order_by(Question.created_at.desc()).offset(offset).limit(limit)
-        result = await self._session.execute(stmt)
-        return list(result.scalars().unique().all())
+        return await self.list_generic(
+            filter_params=filter_params,
+            filter_map=filter_map,
+            search_columns=search_columns,
+            sort_map=sort_map,
+            default_sort=default_sort,
+            model=Question,
+            extra_query_builder=extra_builder,
+            options=[selectinload(Question.topics)],
+        )
 
     async def get_random_by_topics(
         self, topic_ids: list[uuid.UUID], limit: int = 10
@@ -65,7 +82,7 @@ class QuestionRepository:
             .order_by(func.random())
             .limit(limit)
         )
-        result = await self._session.execute(stmt)
+        result = await self.db.execute(stmt)
         return list(result.scalars().unique().all())
 
     async def get_questions_by_user_attempt_accuracy(
@@ -84,18 +101,18 @@ class QuestionRepository:
             .order_by(accuracy_expr.asc(), Question.created_at.desc())
             .limit(limit)
         )
-        result = await self._session.execute(stmt)
+        result = await self.db.execute(stmt)
         return list(result.scalars().unique().all())
 
     async def update(self, question: Question) -> Question:
-        merged = await self._session.merge(question)
-        await self._session.flush()
+        merged = await self.db.merge(question)
+        await self.db.flush()
         return merged
 
     async def delete(self, question_id: uuid.UUID) -> bool:
-        question = await self._session.get(Question, question_id)
+        question = await self.db.get(Question, question_id)
         if question is None:
             return False
-        await self._session.delete(question)
-        await self._session.flush()
+        await self.db.delete(question)
+        await self.db.flush()
         return True

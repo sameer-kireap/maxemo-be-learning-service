@@ -12,6 +12,7 @@ from app.repository import (
     QuestionRepository,
     TopicRepository,
 )
+from app.schema.filter import FilterParams
 
 
 @pytest.mark.asyncio
@@ -34,10 +35,10 @@ async def test_topic_repository_crud(db_session: AsyncSession) -> None:
     assert by_name is not None
     assert by_name.id == created.id
 
-    # List all
-    all_topics = await repo.list_all()
-    assert len(all_topics) >= 1
-    assert any(t.id == created.id for t in all_topics)
+    # List all via list_generic
+    items, total = await repo.list_topics(FilterParams(offset=0, limit=10))
+    assert total >= 1
+    assert any(t.id == created.id for t in items)
 
 
 @pytest.mark.asyncio
@@ -64,10 +65,12 @@ async def test_question_repository_crud(db_session: AsyncSession) -> None:
     assert len(fetched_q.topics) == 1
     assert fetched_q.topics[0].name == "Pharmacology"
 
-    # Filter by topic
-    by_topic = await question_repo.list_all(topic_id=topic.id)
-    assert len(by_topic) >= 1
-    assert any(q.id == created_q.id for q in by_topic)
+    # Filter by topic via list_questions
+    items, total = await question_repo.list_questions(
+        FilterParams(offset=0, limit=10), topic_id=topic.id
+    )
+    assert total >= 1
+    assert any(q.id == created_q.id for q in items)
 
     # Delete question
     deleted = await question_repo.delete(created_q.id)
@@ -111,11 +114,11 @@ async def test_attempt_repository_raw_queries(db_session: AsyncSession) -> None:
         )
     )
 
-    # Verify raw summary tuple: (total, correct, total_time)
-    total, correct, total_time = await attempt_repo.get_raw_user_performance(user_id)
-    assert total == 2
-    assert correct == 1
-    assert total_time == 40.0
+    # Verify raw summary tuple: row containing (total, correct, total_time)
+    row = await attempt_repo.get_raw_user_performance(user_id)
+    assert row.total_attempts == 2
+    assert row.correct_attempts == 1
+    assert float(row.total_time_seconds) == 40.0
 
     # Verify incorrect attempts
     incorrect = await attempt_repo.get_incorrect_attempts_by_user(user_id)
