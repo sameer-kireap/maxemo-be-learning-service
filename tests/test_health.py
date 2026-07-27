@@ -14,9 +14,10 @@ async def test_health_check_returns_200(client: AsyncClient) -> None:
 async def test_health_check_response_shape(client: AsyncClient) -> None:
     response = await client.get("/api/v1/health")
     body = response.json()
-    assert body["status"] == "healthy"
-    assert "service" in body
-    assert "version" in body
+    assert body["success"] is True
+    assert body["data"]["status"] == "healthy"
+    assert "service" in body["data"]
+    assert "version" in body["data"]
 
 
 @pytest.mark.asyncio
@@ -26,5 +27,5 @@ async def test_health_check_version_matches_settings(client: AsyncClient) -> Non
     settings = get_settings()
     response = await client.get("/api/v1/health")
     body = response.json()
-    assert body["version"] == settings.app_version
-    assert body["service"] == settings.app_name
+    assert body["data"]["version"] == settings.app_version
+    assert body["data"]["service"] == settings.app_name

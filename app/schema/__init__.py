@@ -1,10 +1,14 @@
 """Pydantic schemas."""
 
-from app.schema.attempt import AttemptResponse, AttemptSubmit
+from app.schema.attempt import (
+    AttemptResponse,
+    AttemptSubmit,
+    TopicPerformanceResponse,
+    UserPerformanceResponse,
+)
 from app.schema.error import ErrorDetail, ErrorResponse
 from app.schema.filter import FilterParams
 from app.schema.health import HealthResponse
-from app.schema.performance import TopicPerformanceResponse, UserPerformanceResponse
 from app.schema.question import (
     QuestionAdminResponse,
     QuestionCreate,

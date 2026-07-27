@@ -3,12 +3,23 @@
 import uuid
 
 from app.constant.difficulty import DifficultyLevel
-from app.exception import InvalidOptionIndexException, NotFoundException
+from app.exception import (
+    InvalidOptionIndexException,
+    QuestionNotFoundException,
+    TopicNotFoundException,
+)
 from app.interface.question_service import IQuestionService
-from app.model.question import Question
+from app.mapper.question_mapper import QuestionMapper
 from app.repository.question_repository import QuestionRepository
 from app.repository.topic_repository import TopicRepository
 from app.schema.filter import FilterParams
+from app.schema.question import (
+    QuestionAdminResponse,
+    QuestionCreate,
+    QuestionResponse,
+    QuestionUpdate,
+)
+from app.schema.response import PaginatedResponse
 
 
 class QuestionService(IQuestionService):
@@ -22,103 +33,85 @@ class QuestionService(IQuestionService):
         self._question_repo = question_repository
         self._topic_repo = topic_repository
 
-    async def create_question(
-        self,
-        text: str,
-        options: list[str],
-        correct_option_index: int,
-        difficulty: DifficultyLevel,
-        topic_ids: list[uuid.UUID],
-    ) -> Question:
-        if correct_option_index < 0 or correct_option_index >= len(options):
+    async def create_question(self, payload: QuestionCreate) -> QuestionAdminResponse:
+        if payload.correct_option_index < 0 or payload.correct_option_index >= len(payload.options):
             raise InvalidOptionIndexException(
-                index=correct_option_index, options_count=len(options)
+                index=payload.correct_option_index, options_count=len(payload.options)
             )
 
-        topics = await self._topic_repo.get_by_ids(topic_ids)
-        if len(topics) != len(set(topic_ids)):
-            missing = set(topic_ids) - {t.id for t in topics}
-            raise NotFoundException(entity="Topic", entity_id=str(list(missing)[0]))
+        topics = await self._topic_repo.get_by_ids(payload.topic_ids)
+        if len(topics) != len(set(payload.topic_ids)):
+            missing = set(payload.topic_ids) - {t.id for t in topics}
+            raise TopicNotFoundException(topic_id=str(list(missing)[0]))
 
-        question = Question(
-            text=text.strip(),
-            options=options,
-            correct_option_index=correct_option_index,
-            difficulty=difficulty,
-            topics=topics,
-        )
-        return await self._question_repo.create(question)
+        question = QuestionMapper.to_entity(payload, topics)
+        created = await self._question_repo.create(question)
+        return QuestionMapper.to_admin_response(created)
 
-    async def get_question_by_id(self, question_id: uuid.UUID) -> Question:
+    async def get_question_by_id(self, question_id: uuid.UUID) -> QuestionResponse:
         question = await self._question_repo.get_by_id(question_id)
         if question is None:
-            raise NotFoundException(entity="Question", entity_id=question_id)
-        return question
-
-    async def list_questions(
-        self,
-        topic_id: uuid.UUID | None = None,
-        difficulty: DifficultyLevel | None = None,
-        offset: int = 0,
-        limit: int = 100,
-    ) -> list[Question]:
-        filter_params = FilterParams(offset=offset, limit=limit, sort_by="created_at")
-        filter_params.difficulty = difficulty  # type: ignore[attr-defined]
-        items, _ = await self._question_repo.list_questions(
-            filter_params, topic_id=topic_id
-        )
-        return items
+            raise QuestionNotFoundException(question_id=question_id)
+        return QuestionMapper.to_response(question)
 
     async def list_questions_paginated(
         self,
         filter_params: FilterParams,
         topic_id: uuid.UUID | None = None,
-    ) -> tuple[list[Question], int]:
-        return await self._question_repo.list_questions(
+        difficulty: DifficultyLevel | None = None,
+    ) -> PaginatedResponse[QuestionResponse]:
+        if difficulty is not None:
+            filter_params.difficulty = difficulty  # type: ignore[attr-defined]
+
+        items, total = await self._question_repo.list_questions(
             filter_params, topic_id=topic_id
+        )
+        return PaginatedResponse(
+            offset=filter_params.offset,
+            limit=filter_params.limit,
+            total_records=total,
+            items=QuestionMapper.to_response_list(items),
         )
 
     async def get_practice_questions(
         self, topic_ids: list[uuid.UUID], limit: int = 10
-    ) -> list[Question]:
-        return await self._question_repo.get_random_by_topics(topic_ids, limit=limit)
+    ) -> list[QuestionResponse]:
+        questions = await self._question_repo.get_random_by_topics(topic_ids, limit=limit)
+        return QuestionMapper.to_response_list(questions)
 
     async def update_question(
-        self,
-        question_id: uuid.UUID,
-        text: str | None = None,
-        options: list[str] | None = None,
-        correct_option_index: int | None = None,
-        difficulty: DifficultyLevel | None = None,
-        topic_ids: list[uuid.UUID] | None = None,
-    ) -> Question:
-        question = await self.get_question_by_id(question_id)
+        self, question_id: uuid.UUID, payload: QuestionUpdate
+    ) -> QuestionAdminResponse:
+        question = await self._question_repo.get_by_id(question_id)
+        if question is None:
+            raise QuestionNotFoundException(question_id=question_id)
 
-        opts = options if options is not None else question.options
+        opts = payload.options if payload.options is not None else question.options
         idx = (
-            correct_option_index
-            if correct_option_index is not None
+            payload.correct_option_index
+            if payload.correct_option_index is not None
             else question.correct_option_index
         )
 
         if idx < 0 or idx >= len(opts):
             raise InvalidOptionIndexException(index=idx, options_count=len(opts))
 
-        if text is not None:
-            question.text = text.strip()
-        if options is not None:
-            question.options = options
-        if correct_option_index is not None:
-            question.correct_option_index = correct_option_index
-        if difficulty is not None:
-            question.difficulty = difficulty
-        if topic_ids is not None:
-            topics = await self._topic_repo.get_by_ids(topic_ids)
+        if payload.text is not None:
+            question.text = payload.text.strip()
+        if payload.options is not None:
+            question.options = payload.options
+        if payload.correct_option_index is not None:
+            question.correct_option_index = payload.correct_option_index
+        if payload.difficulty is not None:
+            question.difficulty = payload.difficulty
+        if payload.topic_ids is not None:
+            topics = await self._topic_repo.get_by_ids(payload.topic_ids)
             question.topics = topics
 
-        return await self._question_repo.update(question)
+        updated = await self._question_repo.update(question)
+        return QuestionMapper.to_admin_response(updated)
 
     async def delete_question(self, question_id: uuid.UUID) -> None:
         deleted = await self._question_repo.delete(question_id)
         if not deleted:
-            raise NotFoundException(entity="Question", entity_id=question_id)
+            raise QuestionNotFoundException(question_id=question_id)

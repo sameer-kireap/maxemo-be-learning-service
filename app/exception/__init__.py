@@ -1,21 +1,21 @@
-"""Application exceptions and global exception handlers."""
+"""Application custom exceptions and global exception handler."""
 
 from app.exception.base import CustomException
-from app.exception.domain import (
-    BadRequestException,
-    DuplicateException,
-    InternalServerErrorException,
-    InvalidOptionIndexException,
-    NotFoundException,
-)
 from app.exception.handler import register_exception_handlers
+from app.exception.question import (
+    InvalidOptionIndexException,
+    QuestionNotFoundException,
+)
+from app.exception.topic import (
+    TopicAlreadyExistsException,
+    TopicNotFoundException,
+)
 
 __all__ = [
-    "BadRequestException",
     "CustomException",
-    "DuplicateException",
-    "InternalServerErrorException",
     "InvalidOptionIndexException",
-    "NotFoundException",
+    "QuestionNotFoundException",
+    "TopicAlreadyExistsException",
+    "TopicNotFoundException",
     "register_exception_handlers",
 ]

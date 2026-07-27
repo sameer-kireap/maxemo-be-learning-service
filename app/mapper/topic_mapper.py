@@ -1,11 +1,15 @@
-"""Topic entity to DTO mapper."""
+"""Topic entity and DTO mapper."""
 
 from app.model.topic import Topic
-from app.schema.topic import TopicResponse
+from app.schema.topic import TopicCreate, TopicResponse
 
 
 class TopicMapper:
-    """Maps Topic ORM entities to DTO responses."""
+    """Maps Topic entities to DTO responses and payload DTOs to entities."""
+
+    @staticmethod
+    def to_entity(payload: TopicCreate) -> Topic:
+        return Topic(name=payload.name.strip())
 
     @staticmethod
     def to_response(topic: Topic) -> TopicResponse:

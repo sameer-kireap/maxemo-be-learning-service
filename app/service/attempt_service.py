@@ -1,15 +1,22 @@
 """Attempt domain service."""
 
-import uuid
-from typing import Any
-
-from app.exception import InvalidOptionIndexException, NotFoundException
+from app.exception import (
+    InvalidOptionIndexException,
+    QuestionNotFoundException,
+)
 from app.interface.attempt_service import IAttemptService
-from app.model.attempt import QuestionAttempt
-from app.model.question import Question
+from app.mapper.attempt_mapper import AttemptMapper
+from app.mapper.question_mapper import QuestionMapper
 from app.repository.attempt_repository import AttemptRepository
 from app.repository.question_repository import QuestionRepository
+from app.schema.attempt import (
+    AttemptResponse,
+    AttemptSubmit,
+    UserPerformanceResponse,
+)
 from app.schema.filter import FilterParams
+from app.schema.question import QuestionResponse
+from app.schema.response import PaginatedResponse
 
 
 class AttemptService(IAttemptService):
@@ -23,93 +30,53 @@ class AttemptService(IAttemptService):
         self._attempt_repo = attempt_repository
         self._question_repo = question_repository
 
-    async def submit_attempt(
-        self,
-        user_id: int,
-        question_id: uuid.UUID,
-        selected_option_index: int | None,
-        time_taken_seconds: int,
-    ) -> QuestionAttempt:
-        question = await self._question_repo.get_by_id(question_id)
+    async def submit_attempt(self, payload: AttemptSubmit) -> AttemptResponse:
+        question = await self._question_repo.get_by_id(payload.question_id)
         if question is None:
-            raise NotFoundException(entity="Question", entity_id=question_id)
+            raise QuestionNotFoundException(question_id=payload.question_id)
 
-        if selected_option_index is not None and (
-            selected_option_index < 0 or selected_option_index >= len(question.options)
+        if payload.selected_option_index is not None and (
+            payload.selected_option_index < 0
+            or payload.selected_option_index >= len(question.options)
         ):
             raise InvalidOptionIndexException(
-                index=selected_option_index, options_count=len(question.options)
+                index=payload.selected_option_index, options_count=len(question.options)
             )
 
         # SERVER-DERIVED BUSINESS INVARIANT: Never trust client-provided is_correct
         is_correct = (
-            selected_option_index is not None
-            and selected_option_index == question.correct_option_index
+            payload.selected_option_index is not None
+            and payload.selected_option_index == question.correct_option_index
         )
 
-        attempt = QuestionAttempt(
-            user_id=user_id,
-            question_id=question_id,
-            selected_option_index=selected_option_index,
-            is_correct=is_correct,
-            time_taken_seconds=time_taken_seconds,
+        attempt = AttemptMapper.to_entity(payload, is_correct)
+        created = await self._attempt_repo.create(attempt)
+        # Attach question relation for DTO response mapping
+        created.question = question
+        return AttemptMapper.to_response(created)
+
+    async def list_user_attempts_paginated(
+        self, user_id: int, filter_params: FilterParams
+    ) -> PaginatedResponse[AttemptResponse]:
+        items, total = await self._attempt_repo.list_attempts(user_id, filter_params)
+        return PaginatedResponse(
+            offset=filter_params.offset,
+            limit=filter_params.limit,
+            total_records=total,
+            items=AttemptMapper.to_response_list(items),
         )
-        return await self._attempt_repo.create(attempt)
 
-    async def get_user_attempts(
-        self, user_id: int, offset: int = 0, limit: int = 100
-    ) -> list[QuestionAttempt]:
-        filter_params = FilterParams(offset=offset, limit=limit)
-        items, _ = await self._attempt_repo.list_attempts(user_id, filter_params)
-        return items
-
-    async def get_user_performance_summary(self, user_id: int) -> dict[str, Any]:
-        """Calculates performance statistics from raw DB aggregates."""
-        row = await self._attempt_repo.get_raw_user_performance(user_id)
-
-        total = row.total_attempts or 0
-        correct = row.correct_attempts or 0
-        total_time = float(row.total_time_seconds) if row.total_time_seconds else 0.0
-
-        accuracy = (correct / total * 100.0) if total > 0 else 0.0
-        avg_time = (total_time / total) if total > 0 else 0.0
-
-        topic_breakdown = await self.get_user_topic_performance(user_id)
-
-        return {
-            "user_id": user_id,
-            "total_attempts": total,
-            "correct_attempts": correct,
-            "accuracy_percentage": round(accuracy, 2),
-            "avg_time_taken_seconds": round(avg_time, 2),
-            "topic_breakdown": topic_breakdown,
-        }
-
-    async def get_user_topic_performance(self, user_id: int) -> list[dict[str, Any]]:
-        """Calculates topic breakdown performance stats from raw DB rows."""
-        rows = await self._attempt_repo.get_raw_topic_performance(user_id)
-
-        topic_stats: list[dict[str, Any]] = []
-        for r in rows:
-            t_total = r.total_attempts or 0
-            t_correct = r.correct_attempts or 0
-            t_acc = (t_correct / t_total * 100.0) if t_total > 0 else 0.0
-            topic_stats.append(
-                {
-                    "topic_id": str(r.topic_id),
-                    "topic_name": r.topic_name,
-                    "total_attempts": t_total,
-                    "correct_attempts": t_correct,
-                    "accuracy_percentage": round(t_acc, 2),
-                }
-            )
-
-        return topic_stats
+    async def get_user_performance_summary(self, user_id: int) -> UserPerformanceResponse:
+        """Delegates performance DTO mapping to AttemptMapper."""
+        user_row = await self._attempt_repo.get_raw_user_performance(user_id)
+        topic_rows = await self._attempt_repo.get_raw_topic_performance(user_id)
+        return AttemptMapper.to_user_performance(user_id, user_row, topic_rows)
 
     async def get_revision_recommendations(
         self, user_id: int, limit: int = 10
-    ) -> list[Question]:
+    ) -> list[QuestionResponse]:
         """Recommends weakest questions for user based on past performance."""
-        return await self._question_repo.get_questions_by_user_attempt_accuracy(
+        questions = await self._question_repo.get_questions_by_user_attempt_accuracy(
             user_id, limit=limit
         )
+        return QuestionMapper.to_response_list(questions)

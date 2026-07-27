@@ -1,4 +1,4 @@
-"""Entity to DTO mappers."""
+"""Entity and DTO mappers."""
 
 from app.mapper.attempt_mapper import AttemptMapper
 from app.mapper.question_mapper import QuestionMapper

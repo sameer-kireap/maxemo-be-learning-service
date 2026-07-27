@@ -4,7 +4,7 @@ import pytest
 from fastapi import APIRouter
 from httpx import ASGITransport, AsyncClient
 
-from app.exception import NotFoundException
+from app.exception import QuestionNotFoundException
 from app.main import create_app
 
 dummy_error_router = APIRouter(prefix="/api/v1/dummy-errors")
@@ -12,7 +12,7 @@ dummy_error_router = APIRouter(prefix="/api/v1/dummy-errors")
 
 @dummy_error_router.get("/custom-not-found")
 async def trigger_custom_not_found() -> None:
-    raise NotFoundException(entity="Topic", entity_id="12345")
+    raise QuestionNotFoundException(question_id="12345")
 
 
 @dummy_error_router.get("/unhandled-service-error")
@@ -31,9 +31,8 @@ async def test_custom_exception_returns_formatted_json() -> None:
         response = await client.get("/api/v1/dummy-errors/custom-not-found")
         assert response.status_code == 404
         data = response.json()
-        assert data["error"]["code"] == "TOPIC_NOT_FOUND"
-        assert "Topic not found: 12345" in data["error"]["message"]
-        assert data["error"]["details"]["entity"] == "Topic"
+        assert data["error"]["code"] == "QUESTION_NOT_FOUND"
+        assert "Question with ID '12345' was not found" in data["error"]["message"]
 
 
 @pytest.mark.asyncio
