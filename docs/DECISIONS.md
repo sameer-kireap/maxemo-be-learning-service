@@ -1,59 +1,29 @@
 # Architectural Decision Records (ADRs)
 
-This document formally records all major technical and design decisions made during the development of the **Maxemo Learning Analytics Microservice**.
+This document formally records all key architectural and engineering decisions made during the development of the **Maxemo Learning Analytics Microservice**.
 
 ---
 
 ## Decision Index
 
-1. [ADR-001: Choice of PostgreSQL 16 as Relational Database](#adr-001-choice-of-postgresql-16-as-relational-database)
-2. [ADR-002: Choice of FastAPI Web Framework](#adr-002-choice-of-fastapi-web-framework)
-3. [ADR-003: Choice of Clean Architecture Structure](#adr-003-choice-of-clean-architecture-structure)
-4. [ADR-004: Choice of Repository Pattern with BaseRepository & QueryBuilder](#adr-004-choice-of-repository-pattern-with-baserepository--querybuilder)
-5. [ADR-005: Choice of Primary Key Strategy (UUID vs. BigInt)](#adr-005-choice-of-primary-key-strategy-uuid-vs-bigint)
-6. [ADR-006: Server-Side Derived Option Correctness](#adr-006-server-side-derived-option-correctness)
-7. [ADR-007: Stateless Dynamic Performance Calculation](#adr-007-stateless-dynamic-performance-calculation)
-8. [ADR-008: Omission of Redis Cache in Phase 1](#adr-008-omission-of-redis-cache-in-phase-1)
-9. [ADR-009: Omission of Asynchronous Message Queues / Background Workers](#adr-009-omission-of-asynchronous-message-queues--background-workers)
-10. [ADR-010: Window Function (`COUNT(*) OVER()`) Single-Query Pagination](#adr-010-window-function-count-over-single-query-pagination)
+1. [ADR-001: Choice of Clean Architecture Layered Structure](#adr-001-choice-of-clean-architecture-layered-structure)
+2. [ADR-002: Choice of Generic Repository Pattern & QueryBuilder](#adr-002-choice-of-generic-repository-pattern--querybuilder)
+3. [ADR-003: Choice of Primary Key Strategy (UUID vs. BigInt)](#adr-003-choice-of-primary-key-strategy-uuid-vs-bigint)
+4. [ADR-004: Server-Side Derived Option Correctness](#adr-004-server-side-derived-option-correctness)
+5. [ADR-005: Stateless Dynamic Performance Calculation](#adr-005-stateless-dynamic-performance-calculation)
+6. [ADR-006: Omission of Redis Cache in Phase 1](#adr-006-omission-of-redis-cache-in-phase-1)
+7. [ADR-007: Omission of Asynchronous Message Queues in Phase 1](#adr-007-omission-of-asynchronous-message-queues-in-phase-1)
+8. [ADR-008: Window Function (`COUNT(*) OVER()`) Single-Query Pagination](#adr-008-window-function-count-over-single-query-pagination)
 
 ---
 
-### ADR-001: Choice of PostgreSQL 16 as Relational Database
-
-- **Problem**: Need a robust, ACID-compliant database to store relational question/topic models, structured options (`JSONB`), and high-volume user attempt analytics.
-- **Options Considered**:
-  1. PostgreSQL 16
-  2. MongoDB / Document Store
-  3. MySQL 8.0
-- **Decision**: **PostgreSQL 16**.
-- **Pros**: Native `JSONB` array support for MCQ options, window function support for single-query pagination (`COUNT(*) OVER()`), schema isolation via `learning_schema`, and superior index support (GIN, B-Tree).
-- **Cons**: Requires database connection pooling management under high concurrency.
-- **Trade-Offs**: Relational integrity and transaction guarantees prioritized over schemaless document flexibility.
-
----
-
-### ADR-002: Choice of FastAPI Web Framework
-
-- **Problem**: Require an asynchronous ASGI Python web framework with low overhead, native async/await support, automatically generated OpenAPI schemas, and strict request validation.
-- **Options Considered**:
-  1. FastAPI
-  2. Django REST Framework (DRF)
-  3. Flask / Quart
-- **Decision**: **FastAPI**.
-- **Pros**: Built on Pydantic v2 and Starlette, native type annotation validation, sub-millisecond route dispatch overhead, automatic Swagger UI generation.
-- **Cons**: Requires explicit architecture discipline (unlike Django's "batteries-included" monolith).
-- **Trade-Offs**: High performance and async integration selected over framework-managed admin panels.
-
----
-
-### ADR-003: Choice of Clean Architecture Structure
+### ADR-001: Choice of Clean Architecture Layered Structure
 
 - **Problem**: Need to structure application code so domain rules and business logic remain isolated from database frameworks, web frameworks, and external dependencies.
 - **Options Considered**:
   1. Clean Architecture (Layered Presentation/Service/Repository)
-  2. Django-Style Monolithic App Structure
-  3. Anemic Scripting Approach
+  2. Monolithic Django-Style Structure
+  3. Scripting Approach
 - **Decision**: **Clean Architecture**.
 - **Pros**: Business logic in `app/service/` is testable in isolation using unit tests without needing a running database; interfaces (`app/interface/`) define explicit domain contracts.
 - **Cons**: Higher upfront boilerplates (interfaces, DTOs, mappers).
@@ -61,7 +31,7 @@ This document formally records all major technical and design decisions made dur
 
 ---
 
-### ADR-004: Choice of Repository Pattern with BaseRepository & QueryBuilder
+### ADR-002: Choice of Generic Repository Pattern & QueryBuilder
 
 - **Problem**: Routers and services shouldn't construct raw ORM SQL queries or manage pagination boilerplates directly.
 - **Options Considered**:
@@ -75,13 +45,13 @@ This document formally records all major technical and design decisions made dur
 
 ---
 
-### ADR-005: Choice of Primary Key Strategy (UUID vs. BigInt)
+### ADR-003: Choice of Primary Key Strategy (UUID vs. BigInt)
 
 - **Problem**: Select appropriate primary key types for `topics`, `questions`, and `attempts`.
 - **Options Considered**:
   1. UUID v4 for all entities
   2. Auto-incrementing BigInt for all entities
-  3. Hybrid Strategy: UUID for public entities (`topics`, `questions`), BigInt for high-volume logs (`attempts`)
+  3. Hybrid Strategy: UUID for public domain entities (`topics`, `questions`), BigInt for external integration (`user_id`)
 - **Decision**: **UUID for `topics` and `questions`; BigInt for `user_id` external integration**.
 - **Pros**: UUID prevents ID enumeration attacks on public API endpoints (`/questions/e8f4362e...`). Allows distributed client-side ID generation.
 - **Cons**: UUIDs consume 16 bytes compared to 8 bytes for BigInt, resulting in slightly larger B-Tree index sizes.
@@ -89,7 +59,7 @@ This document formally records all major technical and design decisions made dur
 
 ---
 
-### ADR-006: Server-Side Derived Option Correctness
+### ADR-004: Server-Side Derived Option Correctness
 
 - **Problem**: Prevent malicious clients from forging `is_correct: true` in attempt submission requests.
 - **Options Considered**:
@@ -102,7 +72,7 @@ This document formally records all major technical and design decisions made dur
 
 ---
 
-### ADR-007: Stateless Dynamic Performance Calculation
+### ADR-005: Stateless Dynamic Performance Calculation
 
 - **Problem**: How to calculate user accuracy summary percentages and topic breakdowns.
 - **Options Considered**:
@@ -115,7 +85,7 @@ This document formally records all major technical and design decisions made dur
 
 ---
 
-### ADR-008: Omission of Redis Cache in Phase 1
+### ADR-006: Omission of Redis Cache in Phase 1
 
 - **Problem**: Determine whether an in-memory Redis cache is required for initial MVP deployment.
 - **Options Considered**:
@@ -128,7 +98,7 @@ This document formally records all major technical and design decisions made dur
 
 ---
 
-### ADR-009: Omission of Asynchronous Message Queues / Background Workers
+### ADR-007: Omission of Asynchronous Message Queues in Phase 1
 
 - **Problem**: Decide whether attempt submission should be written to Kafka/RabbitMQ asynchronously.
 - **Options Considered**:
@@ -141,7 +111,7 @@ This document formally records all major technical and design decisions made dur
 
 ---
 
-### ADR-010: Window Function (`COUNT(*) OVER()`) Single-Query Pagination
+### ADR-008: Window Function (`COUNT(*) OVER()`) Single-Query Pagination
 
 - **Problem**: Traditional pagination executes two SQL queries: `SELECT COUNT(*)` followed by `SELECT * LIMIT offset`.
 - **Options Considered**:

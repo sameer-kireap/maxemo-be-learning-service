@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document analyzes the current system performance throughput, identifies theoretical scaling bottlenecks under high concurrent traffic, and details the infrastructure roadmap to scale from **1,000 requests per second (RPS)** to **50,000+ RPS**.
+This document analyzes system performance throughput, identifies theoretical scaling bottlenecks under high concurrent traffic, and details the infrastructure roadmap to scale from **1,000 requests per second (RPS)** to **50,000+ RPS**.
 
 ---
 
@@ -23,10 +23,10 @@ This document analyzes the current system performance throughput, identifies the
 graph TD
     A[Concurrent Traffic Load Increases] --> B{Identified Bottleneck}
     
-    B -- DB Write Bottleneck --> C[PgBouncer + Async Message Queue]
-    B -- Read Analytics CPU Bottleneck --> D[PostgreSQL Read Replicas]
-    B -- Large Attempt Table --> E[Range Partitioning by Month/User]
-    B -- Repeated API Queries --> F[Redis Distributed Cache]
+    B -- DB Write Bottleneck --> C[Async Message Queue - Kafka]
+    B -- Read Analytics CPU Bottleneck --> D[Redis Cache + Read Replicas]
+    B -- Large Attempt Table --> E[Declarative Hash Partitioning]
+    B -- Connection Starvation --> F[PgBouncer Pooler]
 
     C --> G[Scaled Microservice Architecture]
     D --> G
@@ -35,7 +35,7 @@ graph TD
 ```
 
 ### Identified Bottleneck 1: Database Aggregation Read Overhead
-- **Symptom**: High CPU usage on primary PostgreSQL instance when thousands of concurrent users request `/api/v1/attempts/users/{id}/performance`.
+- **Symptom**: High CPU usage on primary PostgreSQL instance when thousands of concurrent users request `/api/v1/users/{id}/performance`.
 - **Remediation**:
   1. Implement **Redis In-Memory Cache** for user performance summaries with a 60-second TTL.
   2. Implement **PostgreSQL Read Replicas**. Route all read endpoints (`GET /topics`, `GET /questions`, `GET /attempts`) to Read Replicas using SQLAlchemy engine routing.
@@ -44,14 +44,24 @@ graph TD
 - **Symptom**: High write latency when 10,000+ learners submit answers simultaneously.
 - **Remediation**:
   1. Introduce **Kafka / RabbitMQ** message broker for asynchronous attempt writes.
-  2. API Handler pushes attempt payload to Kafka topic `learner-attempts` in < 2ms and returns immediate response.
+  2. API Handler pushes attempt payload to Kafka topic `learner-attempts` in < 2ms and returns immediate HTTP response.
   3. Consumer background workers batch insert attempts into PostgreSQL in chunks of 500 records.
+
+### Identified Bottleneck 3: Deep B-Tree Scans on 10M+ Row Attempts Table
+- **Symptom**: Linear B-Tree index depths increase as attempt records exceed 10M+, slowing single-query lookups.
+- **Remediation**:
+  1. **Declarative Hash Partitioning**: Partition `learning_schema.question_attempts` by `HASH(user_id)` across 16 database partitions.
+
+### Identified Bottleneck 4: Database Connection Pool Starvation
+- **Symptom**: Concurrent client HTTP requests exhaust PostgreSQL maximum connection limits, resulting in connection timeout errors.
+- **Remediation**:
+  1. Deploy **PgBouncer** connection pooler in transaction pooling mode to scale up to 5,000+ active client connections.
 
 ---
 
 ## 3. Database Table Partitioning Strategy
 
-When `learning_schema.question_attempts` exceeds **20,000,000 records**, linear B-Tree index depths increase. The table will be partitioned using **PostgreSQL Declarative Hash Partitioning**:
+When `learning_schema.question_attempts` exceeds **10,000,000 records**, the table is partitioned using **PostgreSQL Declarative Hash Partitioning**:
 
 ```sql
 -- Partition attempts table by hash of user_id into 16 partitions
@@ -69,7 +79,6 @@ CREATE TABLE learning_schema.question_attempts_partitioned (
 CREATE TABLE learning_schema.question_attempts_p0 
 PARTITION OF learning_schema.question_attempts_partitioned 
 FOR VALUES WITH (MODULUS 16, REMAINDER 0);
-...
 ```
 
 ---
@@ -83,7 +92,7 @@ sequenceDiagram
     participant Redis as Redis Cache Cluster
     participant DB as Primary PostgreSQL DB
 
-    Client->>API: GET /api/v1/attempts/users/101/performance
+    Client->>API: GET /api/v1/users/101/performance
     API->>Redis: GET user:101:performance
     alt Cache Hit
         Redis-->>API: Cached JSON Payload

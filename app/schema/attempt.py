@@ -54,6 +54,24 @@ class UserPerformanceResponse(BaseModel):
     topic_breakdown: list[TopicPerformanceResponse] = Field(default_factory=list)
 
 
+class TopicRevisionRecommendation(BaseModel):
+    topic_id: uuid.UUID
+    topic: str = Field(..., description="Topic name")
+    priority: int = Field(..., ge=1, description="1-indexed revision priority rank")
+    reason: str = Field(..., description="Explainable reason for revision recommendation")
+    accuracy_percentage: float = Field(..., description="Learner accuracy % in this topic")
+    total_attempts: int = Field(..., description="Total attempts in this topic")
+    correct_attempts: int = Field(..., description="Correct attempts in this topic")
+    last_attempted_at: datetime | None = Field(
+        default=None, description="Timestamp of last attempt"
+    )
+
+
+class TopicRevisionResponse(BaseModel):
+    user_id: int
+    recommendations: list[TopicRevisionRecommendation] = Field(default_factory=list)
+
+
 class AttemptSortField(StrEnum):
     CREATED_AT = "created_at"
 

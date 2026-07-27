@@ -1,4 +1,4 @@
-"""Attempt API endpoints."""
+"""User Analytics & Revision API endpoints."""
 
 from fastapi import APIRouter, Depends, Query, status
 
@@ -7,50 +7,20 @@ from app.interface.attempt_service import IAttemptService
 from app.schema.attempt import (
     AttemptListFilterParams,
     AttemptResponse,
-    AttemptSubmit,
     TopicRevisionResponse,
     UserPerformanceResponse,
 )
 from app.schema.question import QuestionResponse
 from app.schema.response import APIResponse, PaginatedResponse
 
-router = APIRouter(prefix="/attempts", tags=["Attempts"])
-
-
-@router.post(
-    "",
-    response_model=APIResponse[AttemptResponse],
-    status_code=status.HTTP_201_CREATED,
-    summary="Record a learner question attempt (is_correct derived on server)",
-)
-async def submit_attempt(
-    payload: AttemptSubmit,
-    service: IAttemptService = Depends(get_attempt_service),
-) -> APIResponse[AttemptResponse]:
-    data = await service.submit_attempt(payload)
-    return APIResponse(data=data, message="Attempt recorded successfully")
+router = APIRouter(prefix="/users", tags=["User Analytics & Revision"])
 
 
 @router.get(
-    "/users/{user_id}",
-    response_model=APIResponse[PaginatedResponse[AttemptResponse]],
-    status_code=status.HTTP_200_OK,
-    summary="List a learner's attempts with pagination (Alias for /users/{user_id}/attempts)",
-)
-async def list_user_attempts(
-    user_id: int,
-    filter_params: AttemptListFilterParams = Depends(),
-    service: IAttemptService = Depends(get_attempt_service),
-) -> APIResponse[PaginatedResponse[AttemptResponse]]:
-    data = await service.list_user_attempts_paginated(user_id, filter_params)
-    return APIResponse(data=data, message="User attempts retrieved successfully")
-
-
-@router.get(
-    "/users/{user_id}/performance",
+    "/{user_id}/performance",
     response_model=APIResponse[UserPerformanceResponse],
     status_code=status.HTTP_200_OK,
-    summary="Get user overall performance summary (Alias for /users/{user_id}/performance)",
+    summary="Get learner overall performance summary and topic-wise breakdown",
 )
 async def get_user_performance(
     user_id: int,
@@ -61,10 +31,10 @@ async def get_user_performance(
 
 
 @router.get(
-    "/users/{user_id}/revision",
+    "/{user_id}/revision",
     response_model=APIResponse[TopicRevisionResponse],
     status_code=status.HTTP_200_OK,
-    summary="Get personalized topic revision queue (Alias for /users/{user_id}/revision)",
+    summary="Get personalized topic revision queue (recommended top ~5 topics to revise next)",
 )
 async def get_topic_revision_recommendations(
     user_id: int,
@@ -72,14 +42,14 @@ async def get_topic_revision_recommendations(
     service: IAttemptService = Depends(get_attempt_service),
 ) -> APIResponse[TopicRevisionResponse]:
     data = await service.get_topic_revision_recommendations(user_id=user_id, limit=limit)
-    return APIResponse(data=data, message="Topic revision recommendations retrieved successfully")
+    return APIResponse(data=data, message="Topic revision queue calculated successfully")
 
 
 @router.get(
-    "/users/{user_id}/revision/questions",
+    "/{user_id}/revision/questions",
     response_model=APIResponse[list[QuestionResponse]],
     status_code=status.HTTP_200_OK,
-    summary="Get recommended weak questions (Alias for /users/{user_id}/revision/questions)",
+    summary="Get recommended weak questions for a learner to revise based on accuracy",
 )
 async def get_question_revision_recommendations(
     user_id: int,
@@ -88,3 +58,18 @@ async def get_question_revision_recommendations(
 ) -> APIResponse[list[QuestionResponse]]:
     data = await service.get_question_revision_recommendations(user_id=user_id, limit=limit)
     return APIResponse(data=data, message="Question revision recommendations retrieved")
+
+
+@router.get(
+    "/{user_id}/attempts",
+    response_model=APIResponse[PaginatedResponse[AttemptResponse]],
+    status_code=status.HTTP_200_OK,
+    summary="List a learner's attempts history with pagination",
+)
+async def list_user_attempts(
+    user_id: int,
+    filter_params: AttemptListFilterParams = Depends(),
+    service: IAttemptService = Depends(get_attempt_service),
+) -> APIResponse[PaginatedResponse[AttemptResponse]]:
+    data = await service.list_user_attempts_paginated(user_id, filter_params)
+    return APIResponse(data=data, message="User attempts retrieved successfully")

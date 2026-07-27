@@ -125,6 +125,51 @@ async def test_attempt_service_server_derived_correctness(
 
 
 @pytest.mark.asyncio
+async def test_attempt_service_topic_revision_recommendations(
+    db_session: AsyncSession,
+) -> None:
+    topic_repo = TopicRepository(db_session)
+    q_repo = QuestionRepository(db_session)
+    attempt_repo = AttemptRepository(db_session)
+
+    q_service = QuestionService(q_repo, topic_repo)
+    attempt_service = AttemptService(attempt_repo, q_repo)
+
+    topic_renal = await topic_repo.create(Topic(name="Renal Pathology"))
+
+    q_renal = await q_service.create_question(
+        QuestionCreate(
+            text="Renal question stem",
+            options=["Opt 1", "Opt 2"],
+            correct_option_index=0,
+            difficulty=DifficultyLevel.HARD,
+            topic_ids=[topic_renal.id],
+        )
+    )
+
+    user_id = 9912
+
+    # Submit 3 wrong attempts for Renal Pathology
+    for _ in range(3):
+        await attempt_service.submit_attempt(
+            AttemptSubmit(
+                user_id=user_id,
+                question_id=q_renal.id,
+                selected_option_index=1,
+                time_taken_seconds=10,
+            )
+        )
+
+    topic_recs = await attempt_service.get_topic_revision_recommendations(user_id=user_id, limit=5)
+    assert topic_recs.user_id == user_id
+    assert len(topic_recs.recommendations) >= 1
+    first_rec = topic_recs.recommendations[0]
+    assert first_rec.priority == 1
+    assert "Renal Pathology" in first_rec.topic
+    assert "Low accuracy" in first_rec.reason
+
+
+@pytest.mark.asyncio
 async def test_attempt_service_invalid_option_index_raises(
     db_session: AsyncSession,
 ) -> None:

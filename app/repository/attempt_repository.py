@@ -75,7 +75,7 @@ class AttemptRepository(BaseRepository[QuestionAttempt]):
         return result.one()
 
     async def get_raw_topic_performance(self, user_id: int) -> Any:  # noqa: ANN401
-        """Returns raw database rows directly from DB result without transformation."""
+        """Returns raw database rows: topic_id, topic_name, total, correct, last_attempted_at."""
         stmt = (
             select(
                 Topic.id.label("topic_id"),
@@ -84,6 +84,7 @@ class AttemptRepository(BaseRepository[QuestionAttempt]):
                 func.sum(case((QuestionAttempt.is_correct.is_(True), 1), else_=0)).label(
                     "correct_attempts"
                 ),
+                func.max(QuestionAttempt.created_at).label("last_attempted_at"),
             )
             .join(QuestionTopic, QuestionTopic.topic_id == Topic.id)
             .join(Question, Question.id == QuestionTopic.question_id)
@@ -94,6 +95,18 @@ class AttemptRepository(BaseRepository[QuestionAttempt]):
         )
         result = await self.db.execute(stmt)
         return result.all()
+
+    async def get_unattempted_topics_for_user(self, user_id: int) -> Any:  # noqa: ANN401
+        """Fetches topics that exist in the system but have 0 attempts recorded for this user."""
+        attempted_topic_ids_subquery = (
+            select(QuestionTopic.topic_id)
+            .join(QuestionAttempt, QuestionAttempt.question_id == QuestionTopic.question_id)
+            .where(QuestionAttempt.user_id == user_id)
+            .scalar_subquery()
+        )
+        stmt = select(Topic).where(Topic.id.not_in(attempted_topic_ids_subquery))
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
 
     async def get_incorrect_attempts_by_user(
         self, user_id: int, limit: int = 10

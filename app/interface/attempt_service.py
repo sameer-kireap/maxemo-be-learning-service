@@ -6,6 +6,7 @@ from typing import Any
 from app.schema.attempt import (
     AttemptResponse,
     AttemptSubmit,
+    TopicRevisionResponse,
     UserPerformanceResponse,
 )
 from app.schema.filter import FilterParams
@@ -31,7 +32,13 @@ class IAttemptService(ABC):
         ...
 
     @abstractmethod
-    async def get_revision_recommendations(
+    async def get_topic_revision_recommendations(
+        self, user_id: int, limit: int = 5
+    ) -> TopicRevisionResponse:
+        ...
+
+    @abstractmethod
+    async def get_question_revision_recommendations(
         self, user_id: int, limit: int = 10
     ) -> list[QuestionResponse]:
         ...

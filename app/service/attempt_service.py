@@ -14,6 +14,7 @@ from app.repository.question_repository import QuestionRepository
 from app.schema.attempt import (
     AttemptResponse,
     AttemptSubmit,
+    TopicRevisionResponse,
     UserPerformanceResponse,
 )
 from app.schema.filter import FilterParams
@@ -74,7 +75,20 @@ class AttemptService(IAttemptService):
         topic_rows = await self._attempt_repo.get_raw_topic_performance(user_id)
         return AttemptMapper.to_user_performance(user_id, user_row, topic_rows)
 
-    async def get_revision_recommendations(
+    async def get_topic_revision_recommendations(
+        self, user_id: int, limit: int = 5
+    ) -> TopicRevisionResponse:
+        """Calculates multi-factor topic revision priorities for user."""
+        attempted_topics = await self._attempt_repo.get_raw_topic_performance(user_id)
+        unattempted_topics = await self._attempt_repo.get_unattempted_topics_for_user(user_id)
+        return AttemptMapper.to_topic_revision_recommendations(
+            user_id=user_id,
+            attempted_topic_rows=attempted_topics,
+            unattempted_topics=unattempted_topics,
+            limit=limit,
+        )
+
+    async def get_question_revision_recommendations(
         self, user_id: int, limit: int = 10
     ) -> list[QuestionResponse]:
         """Recommends weakest questions for user based on past performance."""

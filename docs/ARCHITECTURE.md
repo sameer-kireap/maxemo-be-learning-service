@@ -128,29 +128,38 @@ app/dependencies/
 
 ## 4. Error & Exception Handling Architecture
 
-All exceptions derive from `CustomException` (`app/exception/base.py`) which defines standard attributes: `message`, `error_code`, and `status_code`.
+The application enforces a centralized, 3-pronged exception handling system registered in `app/exception/handler.py`. All domain exceptions derive from `CustomException` (`app/exception/base.py`), ensuring standard error payloads without leaking raw internal stack traces.
 
 ```mermaid
 graph TD
-    A[Runtime Exception Raised] --> B{Is CustomException?}
-    B -- Yes --> C[CustomException Handler]
-    B -- No --> D[Global 500 Handler]
+    A[Exception Raised During Request Execution] --> B{Exception Type}
     
-    C --> E[Extract status_code, message, error_code]
-    E --> F[Construct APIResponse with success=False, error=Dict]
+    B -- Custom Domain Exception --> C[custom_exception_handler]
+    B -- Request Validation Error --> D[validation_exception_handler]
+    B -- Unhandled System Crash --> E[global_unhandled_exception_handler]
     
-    D --> G[Log traceback with logger.exception]
-    G --> H[Construct 500 APIResponse code=INTERNAL_SERVER_ERROR]
+    C --> F["Extract status_code (HTTP 400 / 404 / 409)<br/>Read custom error_code & message"]
+    D --> G["Extract Pydantic field location & validation rule<br/>Return HTTP 422 UNPROCESSABLE_ENTITY"]
+    E --> H["Log full traceback via logger.exception<br/>Return HTTP 500 INTERNAL_SERVER_ERROR"]
     
-    F --> I[Return JSONResponse to Client]
+    F --> I["Format Unified Error Payload<br/>{'error': {'code': ..., 'message': ..., 'details': ...}}"]
+    G --> I
     H --> I
+    
+    I --> J[Return JSONResponse to Client]
 ```
 
-### Exception Class Taxonomy
-- **`QuestionNotFoundException`** (HTTP 404, `QUESTION_NOT_FOUND`)
-- **`TopicNotFoundException`** (HTTP 404, `TOPIC_NOT_FOUND`)
-- **`TopicAlreadyExistsException`** (HTTP 409, `TOPIC_ALREADY_EXISTS`)
-- **`InvalidOptionIndexException`** (HTTP 400, `INVALID_OPTION_INDEX`)
+### Exception Class Taxonomy & Mappings
+
+| Exception Class | Parent Class | Status Code | Error Code | Description / Trigger |
+|---|---|---|---|---|
+| **`TopicNotFoundException`** | `CustomException` | `404 NOT FOUND` | `TOPIC_NOT_FOUND` | Raised when requested Topic UUID does not exist |
+| **`QuestionNotFoundException`** | `CustomException` | `404 NOT FOUND` | `QUESTION_NOT_FOUND` | Raised when requested Question UUID does not exist |
+| **`TopicAlreadyExistsException`** | `CustomException` | `409 CONFLICT` | `TOPIC_ALREADY_EXISTS` | Raised when creating a Topic with a duplicate name |
+| **`InvalidOptionIndexException`** | `CustomException` | `400 BAD REQUEST` | `INVALID_OPTION_INDEX` | Raised when `correct_option_index` or `selected_option_index` is out of bounds |
+| **`RequestValidationError`** | FastAPI / Pydantic | `422 UNPROCESSABLE` | `VALIDATION_ERROR` | Raised automatically on payload schema/type mismatch |
+| **`Unhandled Exception`** | `Exception` | `500 INTERNAL ERROR` | `INTERNAL_SERVER_ERROR` | Catch-all for uncaught system bugs (logs traceback safely) |
+
 
 ---
 
