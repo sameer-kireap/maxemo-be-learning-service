@@ -1,5 +1,7 @@
 """Integration tests for repositories."""
 
+import uuid
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,20 +20,21 @@ from app.schema.filter import FilterParams
 @pytest.mark.asyncio
 async def test_topic_repository_crud(db_session: AsyncSession) -> None:
     repo = TopicRepository(db_session)
+    topic_name = f"Cardiology Basics-{uuid.uuid4().hex[:6]}"
 
     # Create topic
-    topic = Topic(name="Cardiology Basics")
+    topic = Topic(name=topic_name)
     created = await repo.create(topic)
     assert created.id is not None
-    assert created.name == "Cardiology Basics"
+    assert created.name == topic_name
 
     # Get by id
     fetched = await repo.get_by_id(created.id)
     assert fetched is not None
-    assert fetched.name == "Cardiology Basics"
+    assert fetched.name == topic_name
 
     # Get by name
-    by_name = await repo.get_by_name("Cardiology Basics")
+    by_name = await repo.get_by_name(topic_name)
     assert by_name is not None
     assert by_name.id == created.id
 
@@ -45,8 +48,9 @@ async def test_topic_repository_crud(db_session: AsyncSession) -> None:
 async def test_question_repository_crud(db_session: AsyncSession) -> None:
     topic_repo = TopicRepository(db_session)
     question_repo = QuestionRepository(db_session)
+    topic_name = f"Pharmacology Test-{uuid.uuid4().hex[:6]}"
 
-    topic = await topic_repo.create(Topic(name="Pharmacology"))
+    topic = await topic_repo.create(Topic(name=topic_name))
 
     question = Question(
         text="Which drug is a beta-blocker?",
@@ -63,7 +67,7 @@ async def test_question_repository_crud(db_session: AsyncSession) -> None:
     fetched_q = await question_repo.get_by_id(created_q.id)
     assert fetched_q is not None
     assert len(fetched_q.topics) == 1
-    assert fetched_q.topics[0].name == "Pharmacology"
+    assert fetched_q.topics[0].name == topic_name
 
     # Filter by topic via list_questions
     items, total = await question_repo.list_questions(
