@@ -73,6 +73,7 @@ All endpoints return a standardized JSON envelope (`APIResponse[T]`):
 | Method | Endpoint | Description | Key Business Logic / Security |
 |---|---|---|---|
 | **`POST`** | `/api/v1/attempts` | Record a question attempt | **Server-Derived Correctness**: `is_correct` evaluated authoritatively on server |
+| **`GET`** | `/api/v1/attempts/users/{id}` | List learner attempt history | Paginated list of learner attempts with sorting & filters |
 | **`GET`** | `/api/v1/users/{id}/performance` | Learner performance breakdown | Dynamic SQL aggregate calculation of per-topic attempted, correct, & accuracy % |
 | **`GET`** | `/api/v1/users/{id}/revision` | Topic revision queue | Recommends top ~5 weak topics with priority ranks & explainable reasons |
 | **`GET`** | `/api/v1/users/{id}/revision/questions` | Question revision queue | Recommends weak questions sorted by accuracy |

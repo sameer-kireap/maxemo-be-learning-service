@@ -148,7 +148,7 @@ ON learning_schema.question_attempts (user_id, question_id, is_correct);
 
 2. **`ix_learning_schema_questions_difficulty`**: Speeds up filtered pagination queries when filtering questions by `easy`, `medium`, or `hard`.
 
-3. **`ix_attempts_user_question_correct`**: Essential for performance analytics (`GET /api/v1/attempts/users/{id}/performance`) and revision recommendations. Allows PostgreSQL to perform index-only scans when computing user accuracy aggregates without scanning raw table heaps.
+3. **`ix_attempts_user_question_correct`**: Essential for performance analytics (`GET /api/v1/users/{id}/performance`) and revision recommendations. Allows PostgreSQL to perform index-only scans when computing user accuracy aggregates without scanning raw table heaps.
 
 ---
 

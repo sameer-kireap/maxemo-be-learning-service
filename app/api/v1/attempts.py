@@ -1,6 +1,6 @@
 """Attempt API endpoints."""
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, status
 
 from app.dependencies import get_attempt_service
 from app.interface.attempt_service import IAttemptService
@@ -8,10 +8,7 @@ from app.schema.attempt import (
     AttemptListFilterParams,
     AttemptResponse,
     AttemptSubmit,
-    TopicRevisionResponse,
-    UserPerformanceResponse,
 )
-from app.schema.question import QuestionResponse
 from app.schema.response import APIResponse, PaginatedResponse
 
 router = APIRouter(prefix="/attempts", tags=["Attempts"])
@@ -35,7 +32,7 @@ async def submit_attempt(
     "/users/{user_id}",
     response_model=APIResponse[PaginatedResponse[AttemptResponse]],
     status_code=status.HTTP_200_OK,
-    summary="List a learner's attempts with pagination (Alias for /users/{user_id}/attempts)",
+    summary="List a learner's attempts history with pagination",
 )
 async def list_user_attempts(
     user_id: int,
@@ -44,47 +41,3 @@ async def list_user_attempts(
 ) -> APIResponse[PaginatedResponse[AttemptResponse]]:
     data = await service.list_user_attempts_paginated(user_id, filter_params)
     return APIResponse(data=data, message="User attempts retrieved successfully")
-
-
-@router.get(
-    "/users/{user_id}/performance",
-    response_model=APIResponse[UserPerformanceResponse],
-    status_code=status.HTTP_200_OK,
-    summary="Get user overall performance summary (Alias for /users/{user_id}/performance)",
-)
-async def get_user_performance(
-    user_id: int,
-    service: IAttemptService = Depends(get_attempt_service),
-) -> APIResponse[UserPerformanceResponse]:
-    data = await service.get_user_performance_summary(user_id)
-    return APIResponse(data=data, message="User performance calculated successfully")
-
-
-@router.get(
-    "/users/{user_id}/revision",
-    response_model=APIResponse[TopicRevisionResponse],
-    status_code=status.HTTP_200_OK,
-    summary="Get personalized topic revision queue (Alias for /users/{user_id}/revision)",
-)
-async def get_topic_revision_recommendations(
-    user_id: int,
-    limit: int = Query(default=5, ge=1, le=20, description="Max topics to recommend"),
-    service: IAttemptService = Depends(get_attempt_service),
-) -> APIResponse[TopicRevisionResponse]:
-    data = await service.get_topic_revision_recommendations(user_id=user_id, limit=limit)
-    return APIResponse(data=data, message="Topic revision recommendations retrieved successfully")
-
-
-@router.get(
-    "/users/{user_id}/revision/questions",
-    response_model=APIResponse[list[QuestionResponse]],
-    status_code=status.HTTP_200_OK,
-    summary="Get recommended weak questions (Alias for /users/{user_id}/revision/questions)",
-)
-async def get_question_revision_recommendations(
-    user_id: int,
-    limit: int = Query(default=10, ge=1, le=50, description="Max questions to recommend"),
-    service: IAttemptService = Depends(get_attempt_service),
-) -> APIResponse[list[QuestionResponse]]:
-    data = await service.get_question_revision_recommendations(user_id=user_id, limit=limit)
-    return APIResponse(data=data, message="Question revision recommendations retrieved")

@@ -280,7 +280,7 @@ All endpoints wrap their JSON payloads in a uniform response envelope (`APIRespo
 
 ---
 
-#### `GET /api/v1/users/{user_id}/attempts`
+#### `GET /api/v1/attempts/users/{user_id}`
 
 - **Summary**: List a learner's historical attempts with pagination.
 - **Query Parameters**: `offset` (default: 0), `limit` (default: 20), `sort_by` (`created_at`), `sort_order` (`asc`/`desc`).
