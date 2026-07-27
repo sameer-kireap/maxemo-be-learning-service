@@ -1,9 +1,6 @@
-"""Pydantic response schema for the health endpoint."""
+"""Pydantic schemas."""
 
-from pydantic import BaseModel
+from app.schema.error import ErrorDetail, ErrorResponse
+from app.schema.health import HealthResponse
 
-
-class HealthResponse(BaseModel):
-    status: str
-    service: str
-    version: str
+__all__ = ["ErrorDetail", "ErrorResponse", "HealthResponse"]
