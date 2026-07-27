@@ -1,4 +1,22 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: maxemo_be_service
+    command: ["/app/docker-entrypoint.sh"]
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=Learning Analytics Microservice
+      - APP_ENV=production
+      - LOG_LEVEL=INFO
+      - DATABASE_URL=postgresql+asyncpg://maxemo:maxemo_secret@postgres:5432/learning_analytics
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   postgres:
     image: postgres:16-alpine
     container_name: maxemo_postgres
@@ -16,6 +34,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    restart: unless-stopped
 
 volumes:
   postgres_data:
