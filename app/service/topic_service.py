@@ -1,6 +1,7 @@
 """Topic domain service."""
 
 import uuid
+from typing import Any
 
 from app.exception import TopicAlreadyExistsException, TopicNotFoundException
 from app.interface.topic_service import ITopicService
@@ -34,7 +35,7 @@ class TopicService(ITopicService):
         return TopicMapper.to_response(topic)
 
     async def list_topics_paginated(
-        self, filter_params: FilterParams
+        self, filter_params: FilterParams[Any]
     ) -> PaginatedResponse[TopicResponse]:
         items, total = await self._topic_repo.list_topics(filter_params)
         return PaginatedResponse(

@@ -79,14 +79,19 @@ async def test_questions_and_attempts_api_flow(client: AsyncClient) -> None:
     att_data = att_res.json()["data"]
     assert att_data["is_correct"] is True
 
-    # 5. Performance Analytics
-    perf_res = await client.get(f"/api/v1/performance/users/{user_id}")
+    # 5. Performance Analytics under /attempts/users/{user_id}/performance
+    perf_res = await client.get(f"/api/v1/attempts/users/{user_id}/performance")
     assert perf_res.status_code == 200
     perf_data = perf_res.json()["data"]
     assert perf_data["user_id"] == user_id
     assert perf_data["total_attempts"] >= 1
 
-    # 6. Practice Mode
+    # 6. Revision Recommendations under /attempts/users/{user_id}/revision
+    rev_res = await client.get(f"/api/v1/attempts/users/{user_id}/revision?limit=5")
+    assert rev_res.status_code == 200
+    assert isinstance(rev_res.json()["data"], list)
+
+    # 7. Practice Mode
     prac_res = await client.get(f"/api/v1/questions/practice?topic_ids={topic_id}&limit=5")
     assert prac_res.status_code == 200
     assert len(prac_res.json()["data"]) >= 1

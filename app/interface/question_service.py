@@ -2,6 +2,7 @@
 
 import uuid
 from abc import ABC, abstractmethod
+from typing import Any
 
 from app.constant.difficulty import DifficultyLevel
 from app.schema.filter import FilterParams
@@ -28,7 +29,7 @@ class IQuestionService(ABC):
     @abstractmethod
     async def list_questions_paginated(
         self,
-        filter_params: FilterParams,
+        filter_params: FilterParams[Any],
         topic_id: uuid.UUID | None = None,
         difficulty: DifficultyLevel | None = None,
     ) -> PaginatedResponse[QuestionResponse]:

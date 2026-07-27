@@ -19,13 +19,15 @@ class BaseRepository(Generic[T]):  # noqa: UP046
 
     async def list_generic(
         self,
-        filter_params: FilterParams,
+        filter_params: FilterParams[Any],
         filter_map: dict[str, Any],
         search_columns: list[Any],
-        sort_map: dict[str, Any],
+        sort_map: dict[Any, Any],
         default_sort: Any,  # noqa: ANN401
         model: type[T],
-        extra_query_builder: Callable[[QueryBuilder, FilterParams], QueryBuilder] | None = None,
+        extra_query_builder: (
+            Callable[[QueryBuilder, FilterParams[Any]], QueryBuilder] | None
+        ) = None,
         options: list[Any] | None = None,
     ) -> tuple[list[T], int]:
         """Generic list method applying filters, search, sorting, and pagination in one query."""
@@ -51,7 +53,7 @@ class BaseRepository(Generic[T]):  # noqa: UP046
         builder.add_total_count_window()
         builder.apply_pagination(filter_params.offset, filter_params.limit)
 
-        result = await self.db.execute(builder.query)
+        result = await self.db.execute(builder.build())
         rows = result.all()
 
         if not rows:

@@ -4,19 +4,20 @@ from typing import Any
 
 from sqlalchemy import Select, asc, desc, func, or_, select
 
+from app.constant.sort import SortOrder
 from app.schema.filter import FilterParams
 
 
 class QueryBuilder:
     """Builds filtered, searched, sorted, and paginated SQLAlchemy select queries."""
 
-    def __init__(self, model: type[Any]) -> None:
+    def __init__(self, model: type[Any], base_query: Select[Any] | None = None) -> None:
         self.model = model
-        self.query: Select[Any] = select(model)
+        self.query: Select[Any] = base_query if base_query is not None else select(model)
 
     def apply_filters(
         self,
-        filter_params: FilterParams,
+        filter_params: FilterParams[Any],
         filter_map: dict[str, Any],
     ) -> "QueryBuilder":
         for key, column in filter_map.items():
@@ -44,16 +45,20 @@ class QueryBuilder:
 
     def apply_sorting(
         self,
-        sort_by: str | None,
-        sort_order: str | None,
-        sort_map: dict[str, Any],
+        sort_by: Any,  # noqa: ANN401
+        sort_order: SortOrder | str | None,
+        sort_map: dict[Any, Any],
         default_sort: Any,  # noqa: ANN401
     ) -> "QueryBuilder":
-        column = sort_map.get(sort_by) if sort_by else default_sort
+        column = sort_map.get(sort_by) if sort_by is not None else None
         if column is None:
             column = default_sort
 
-        direction = desc if (sort_order and sort_order.lower() == "desc") else asc
+        is_desc = (
+            sort_order == SortOrder.DESC
+            or (isinstance(sort_order, str) and sort_order.lower() == "desc")
+        )
+        direction = desc if is_desc else asc
         self.query = self.query.order_by(direction(column))
         return self
 
@@ -64,3 +69,6 @@ class QueryBuilder:
     def add_total_count_window(self) -> "QueryBuilder":
         self.query = self.query.add_columns(func.count().over().label("total_count"))
         return self
+
+    def build(self) -> Select[Any]:
+        return self.query

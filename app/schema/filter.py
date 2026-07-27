@@ -1,13 +1,20 @@
-"""Filter parameters schema for generic list endpoints."""
+"""Generic filter and pagination parameters."""
+
+from enum import StrEnum
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
+from app.constant.sort import SortOrder
 
-class FilterParams(BaseModel):
-    """Generic list query parameters using limit and offset."""
+SortFieldT = TypeVar("SortFieldT", bound=StrEnum)
 
-    offset: int = Field(default=0, ge=0, description="Record offset")
-    limit: int = Field(default=100, ge=1, le=500, description="Max records to return")
-    search: str | None = Field(default=None, description="Search term across configured columns")
-    sort_by: str | None = Field(default=None, description="Column name to sort by")
-    sort_order: str | None = Field(default="desc", description="Sort direction: asc or desc")
+
+class FilterParams(BaseModel, Generic[SortFieldT]):  # noqa: UP046
+    """Generic query parameter schema for filtering, searching, sorting, and pagination."""
+
+    offset: int = Field(default=0, ge=0, description="Offset start index for pagination")
+    limit: int = Field(default=20, ge=1, le=100, description="Maximum items per page")
+    search: str | None = Field(default=None, description="Free-text search query")
+    sort_by: SortFieldT | None = Field(default=None, description="Field key to sort results by")
+    sort_order: SortOrder = Field(default=SortOrder.DESC, description="Sort direction: asc or desc")

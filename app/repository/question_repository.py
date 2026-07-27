@@ -12,6 +12,11 @@ from app.model.attempt import QuestionAttempt
 from app.model.question import Question
 from app.repository.base_repository import BaseRepository
 from app.schema.filter import FilterParams
+from app.schema.question import (
+    QUESTION_FILTER_MAP,
+    QUESTION_SEARCH_COLUMNS,
+    QUESTION_SORT_MAP,
+)
 from app.utils.repository.query_builder import QueryBuilder
 
 
@@ -37,20 +42,10 @@ class QuestionRepository(BaseRepository[Question]):
 
     async def list_questions(
         self,
-        filter_params: FilterParams,
+        filter_params: FilterParams[Any],
         topic_id: uuid.UUID | None = None,
     ) -> tuple[list[Question], int]:
-        filter_map: dict[str, Any] = {
-            "difficulty": Question.difficulty,
-        }
-        search_columns: list[Any] = [Question.text]
-        sort_map: dict[str, Any] = {
-            "created_at": Question.created_at,
-            "difficulty": Question.difficulty,
-        }
-        default_sort: Any = Question.created_at
-
-        def extra_builder(builder: QueryBuilder, filters: FilterParams) -> QueryBuilder:
+        def extra_builder(builder: QueryBuilder, filters: FilterParams[Any]) -> QueryBuilder:
             if topic_id is not None:
                 builder.query = builder.query.join(QuestionTopic).where(
                     QuestionTopic.topic_id == topic_id
@@ -59,10 +54,10 @@ class QuestionRepository(BaseRepository[Question]):
 
         return await self.list_generic(
             filter_params=filter_params,
-            filter_map=filter_map,
-            search_columns=search_columns,
-            sort_map=sort_map,
-            default_sort=default_sort,
+            filter_map=QUESTION_FILTER_MAP,
+            search_columns=QUESTION_SEARCH_COLUMNS,
+            sort_map=QUESTION_SORT_MAP,
+            default_sort=Question.created_at,
             model=Question,
             extra_query_builder=extra_builder,
             options=[selectinload(Question.topics)],

@@ -1,3 +1,5 @@
+"""FastAPI application factory and entry point."""
+
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -6,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import api_router
+from app.api.health import router as health_router
 from app.core.config import Settings, get_settings
 from app.core.logger import setup_logging
 from app.exception import register_exception_handlers
@@ -42,6 +45,7 @@ def create_app() -> FastAPI:
     )
 
     register_exception_handlers(app)
+    app.include_router(health_router)
     app.include_router(api_router, prefix="/api/v1")
 
     return app

@@ -12,6 +12,11 @@ from app.model.attempt import QuestionAttempt
 from app.model.question import Question
 from app.model.topic import Topic
 from app.repository.base_repository import BaseRepository
+from app.schema.attempt import (
+    ATTEMPT_FILTER_MAP,
+    ATTEMPT_SEARCH_COLUMNS,
+    ATTEMPT_SORT_MAP,
+)
 from app.schema.filter import FilterParams
 from app.utils.repository.query_builder import QueryBuilder
 
@@ -37,23 +42,18 @@ class AttemptRepository(BaseRepository[QuestionAttempt]):
         return result.scalar_one_or_none()
 
     async def list_attempts(
-        self, user_id: int, filter_params: FilterParams
+        self, user_id: int, filter_params: FilterParams[Any]
     ) -> tuple[list[QuestionAttempt], int]:
-        filter_map: dict[str, Any] = {}
-        search_columns: list[Any] = []
-        sort_map: dict[str, Any] = {"created_at": QuestionAttempt.created_at}
-        default_sort: Any = QuestionAttempt.created_at
-
-        def extra_builder(builder: QueryBuilder, filters: FilterParams) -> QueryBuilder:
+        def extra_builder(builder: QueryBuilder, filters: FilterParams[Any]) -> QueryBuilder:
             builder.query = builder.query.where(QuestionAttempt.user_id == user_id)
             return builder
 
         return await self.list_generic(
             filter_params=filter_params,
-            filter_map=filter_map,
-            search_columns=search_columns,
-            sort_map=sort_map,
-            default_sort=default_sort,
+            filter_map=ATTEMPT_FILTER_MAP,
+            search_columns=ATTEMPT_SEARCH_COLUMNS,
+            sort_map=ATTEMPT_SORT_MAP,
+            default_sort=QuestionAttempt.created_at,
             model=QuestionAttempt,
             extra_query_builder=extra_builder,
             options=[selectinload(QuestionAttempt.question)],

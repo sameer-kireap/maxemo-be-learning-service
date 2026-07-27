@@ -1,10 +1,15 @@
-"""Attempt request and response DTO schemas."""
+"""Attempt request, response, and filter DTO schemas."""
 
 import uuid
 from datetime import datetime
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
+from app.constant.sort import SortOrder
+from app.model.attempt import QuestionAttempt
+from app.schema.filter import FilterParams
 from app.schema.question import QuestionResponse
 
 
@@ -47,3 +52,22 @@ class UserPerformanceResponse(BaseModel):
     )
     avg_time_taken_seconds: float = Field(..., description="Average response time in seconds")
     topic_breakdown: list[TopicPerformanceResponse] = Field(default_factory=list)
+
+
+class AttemptSortField(StrEnum):
+    CREATED_AT = "created_at"
+
+
+ATTEMPT_SORT_MAP: dict[AttemptSortField, Any] = {
+    AttemptSortField.CREATED_AT: QuestionAttempt.created_at,
+}
+
+ATTEMPT_FILTER_MAP: dict[str, Any] = {}
+
+ATTEMPT_SEARCH_COLUMNS: list[Any] = []
+
+
+class AttemptListFilterParams(FilterParams[AttemptSortField]):
+    user_id: int | None = Field(default=None, description="Filter by user ID")
+    sort_by: AttemptSortField | None = Field(default=AttemptSortField.CREATED_AT)
+    sort_order: SortOrder = Field(default=SortOrder.DESC)

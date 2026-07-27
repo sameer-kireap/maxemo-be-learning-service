@@ -1,6 +1,7 @@
 """Question domain service."""
 
 import uuid
+from typing import Any
 
 from app.constant.difficulty import DifficultyLevel
 from app.exception import (
@@ -56,7 +57,7 @@ class QuestionService(IQuestionService):
 
     async def list_questions_paginated(
         self,
-        filter_params: FilterParams,
+        filter_params: FilterParams[Any],
         topic_id: uuid.UUID | None = None,
         difficulty: DifficultyLevel | None = None,
     ) -> PaginatedResponse[QuestionResponse]:

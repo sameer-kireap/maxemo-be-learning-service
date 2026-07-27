@@ -1,5 +1,7 @@
 """Attempt domain service."""
 
+from typing import Any
+
 from app.exception import (
     InvalidOptionIndexException,
     QuestionNotFoundException,
@@ -56,7 +58,7 @@ class AttemptService(IAttemptService):
         return AttemptMapper.to_response(created)
 
     async def list_user_attempts_paginated(
-        self, user_id: int, filter_params: FilterParams
+        self, user_id: int, filter_params: FilterParams[Any]
     ) -> PaginatedResponse[AttemptResponse]:
         items, total = await self._attempt_repo.list_attempts(user_id, filter_params)
         return PaginatedResponse(

@@ -10,6 +10,7 @@ from sqlalchemy.orm import selectinload
 from app.model.topic import Topic
 from app.repository.base_repository import BaseRepository
 from app.schema.filter import FilterParams
+from app.schema.topic import TOPIC_FILTER_MAP, TOPIC_SEARCH_COLUMNS, TOPIC_SORT_MAP
 
 
 class TopicRepository(BaseRepository[Topic]):
@@ -45,21 +46,13 @@ class TopicRepository(BaseRepository[Topic]):
         return list(result.scalars().all())
 
     async def list_topics(
-        self, filter_params: FilterParams
+        self, filter_params: FilterParams[Any]
     ) -> tuple[list[Topic], int]:
-        filter_map: dict[str, Any] = {}
-        search_columns: list[Any] = [Topic.name]
-        sort_map: dict[str, Any] = {
-            "name": Topic.name,
-            "created_at": Topic.created_at,
-        }
-        default_sort: Any = Topic.created_at
-
         return await self.list_generic(
             filter_params=filter_params,
-            filter_map=filter_map,
-            search_columns=search_columns,
-            sort_map=sort_map,
-            default_sort=default_sort,
+            filter_map=TOPIC_FILTER_MAP,
+            search_columns=TOPIC_SEARCH_COLUMNS,
+            sort_map=TOPIC_SORT_MAP,
+            default_sort=Topic.created_at,
             model=Topic,
         )

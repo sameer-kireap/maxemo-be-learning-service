@@ -4,13 +4,12 @@ import uuid
 
 from fastapi import APIRouter, Depends, Query, status
 
-from app.constant.difficulty import DifficultyLevel
 from app.dependencies import get_question_service
 from app.interface.question_service import IQuestionService
-from app.schema.filter import FilterParams
 from app.schema.question import (
     QuestionAdminResponse,
     QuestionCreate,
+    QuestionListFilterParams,
     QuestionResponse,
     QuestionUpdate,
 )
@@ -55,13 +54,13 @@ async def get_practice_questions(
     summary="List questions with optional topic and difficulty filters",
 )
 async def list_questions(
-    topic_id: uuid.UUID | None = Query(default=None),
-    difficulty: DifficultyLevel | None = Query(default=None),
-    filter_params: FilterParams = Depends(),
+    filter_params: QuestionListFilterParams = Depends(),
     service: IQuestionService = Depends(get_question_service),
 ) -> APIResponse[PaginatedResponse[QuestionResponse]]:
     data = await service.list_questions_paginated(
-        filter_params=filter_params, topic_id=topic_id, difficulty=difficulty
+        filter_params=filter_params,
+        topic_id=filter_params.topic_id,
+        difficulty=filter_params.difficulty,
     )
     return APIResponse(data=data, message="Questions retrieved successfully")
 

@@ -1,11 +1,16 @@
-"""Question request and response DTO schemas."""
+"""Question request, response, and filter DTO schemas."""
 
 import uuid
 from datetime import datetime
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 from app.constant.difficulty import DifficultyLevel
+from app.constant.sort import SortOrder
+from app.model.question import Question
+from app.schema.filter import FilterParams
 from app.schema.topic import TopicResponse
 
 
@@ -43,3 +48,29 @@ class QuestionAdminResponse(QuestionResponse):
     """Admin-facing question payload — includes correct_option_index for internal authoring."""
 
     correct_option_index: int
+
+
+class QuestionSortField(StrEnum):
+    CREATED_AT = "created_at"
+    DIFFICULTY = "difficulty"
+
+
+QUESTION_SORT_MAP: dict[QuestionSortField, Any] = {
+    QuestionSortField.CREATED_AT: Question.created_at,
+    QuestionSortField.DIFFICULTY: Question.difficulty,
+}
+
+QUESTION_FILTER_MAP: dict[str, Any] = {
+    "difficulty": Question.difficulty,
+}
+
+QUESTION_SEARCH_COLUMNS: list[Any] = [Question.text]
+
+
+class QuestionListFilterParams(FilterParams[QuestionSortField]):
+    difficulty: DifficultyLevel | None = Field(
+        default=None, description="Filter by difficulty level"
+    )
+    topic_id: uuid.UUID | None = Field(default=None, description="Filter by associated topic UUID")
+    sort_by: QuestionSortField | None = Field(default=QuestionSortField.CREATED_AT)
+    sort_order: SortOrder = Field(default=SortOrder.DESC)

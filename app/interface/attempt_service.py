@@ -1,6 +1,7 @@
 """Attempt service interface contract."""
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 from app.schema.attempt import (
     AttemptResponse,
@@ -21,7 +22,7 @@ class IAttemptService(ABC):
 
     @abstractmethod
     async def list_user_attempts_paginated(
-        self, user_id: int, filter_params: FilterParams
+        self, user_id: int, filter_params: FilterParams[Any]
     ) -> PaginatedResponse[AttemptResponse]:
         ...
 

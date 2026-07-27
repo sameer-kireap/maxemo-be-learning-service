@@ -6,9 +6,8 @@ from fastapi import APIRouter, Depends, status
 
 from app.dependencies import get_topic_service
 from app.interface.topic_service import ITopicService
-from app.schema.filter import FilterParams
 from app.schema.response import APIResponse, PaginatedResponse
-from app.schema.topic import TopicCreate, TopicResponse
+from app.schema.topic import TopicCreate, TopicListFilterParams, TopicResponse
 
 router = APIRouter(prefix="/topics", tags=["Topics"])
 
@@ -34,7 +33,7 @@ async def create_topic(
     summary="List all learning topics with search, sorting, and pagination",
 )
 async def list_topics(
-    filter_params: FilterParams = Depends(),
+    filter_params: TopicListFilterParams = Depends(),
     service: ITopicService = Depends(get_topic_service),
 ) -> APIResponse[PaginatedResponse[TopicResponse]]:
     data = await service.list_topics_paginated(filter_params)

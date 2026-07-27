@@ -2,6 +2,7 @@
 
 import uuid
 from abc import ABC, abstractmethod
+from typing import Any
 
 from app.schema.filter import FilterParams
 from app.schema.response import PaginatedResponse
@@ -21,6 +22,6 @@ class ITopicService(ABC):
 
     @abstractmethod
     async def list_topics_paginated(
-        self, filter_params: FilterParams
+        self, filter_params: FilterParams[Any]
     ) -> PaginatedResponse[TopicResponse]:
         ...
