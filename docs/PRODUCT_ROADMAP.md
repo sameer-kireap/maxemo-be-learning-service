@@ -2,8 +2,6 @@
 
 ## Executive Overview
 
-This document presents a strategic product roadmap for the **Maxemo Learning Analytics Service** from a **20+ Year Chief Product Officer (CPO)** perspective.
-
 Evaluating a real-world medical clinical education platform with thousands of active daily learners preparing for high-stakes exams (e.g. USMLE Step 1/2, Board Exams), this roadmap details **5 realistic, feasible, and high-impact product features** designed to maximize learner retention, reduce exam anxiety, and drive daily engagement.
 
 ---

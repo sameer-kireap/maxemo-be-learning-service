@@ -2,7 +2,9 @@
 
 ## Executive Overview
 
-The **Maxemo Learning Analytics Service** is constructed using **Clean Architecture** principles adapted for modern Python 3.12 microservices. The core philosophy is **strict separation of concerns**, **unidirectional dependency flow** (inner domain layers know nothing about outer HTTP/database layers), and **inversion of control (IoC)** via FastAPI dependency injection.
+The **Maxemo Learning Analytics Service** is constructed using **Clean Architecture** principles adapted for modern Python 3.12 microservices. 
+
+The core philosophy centers on **strict separation of concerns**, **unidirectional dependency flow** (inner domain layers know nothing about outer HTTP/database layers), and **inversion of control (IoC)** via FastAPI dependency injection.
 
 ---
 
@@ -38,21 +40,21 @@ graph TD
 
 #### A. Presentation Layer (`app/api/v1/`, `app/api/health.py`)
 - **Responsibility**: HTTP request parsing, query parameter validation, routing, HTTP status code response formatting, and OpenAPI schema generation.
-- **Rules**:
+- **Key Rules**:
   - Routers contain **zero business logic**.
   - Handlers accept Pydantic DTOs and injected Service Interfaces via `Depends()`.
   - All responses are wrapped in standard `APIResponse[T]` or `APIResponse[PaginatedResponse[T]]`.
 
 #### B. Service & Domain Layer (`app/service/`, `app/interface/`, `app/mapper/`, `app/exception/`)
 - **Responsibility**: Business rules, invariants, validation logic, entity transformations, scoring calculations, and orchestrating repositories.
-- **Rules**:
+- **Key Rules**:
   - Services inherit from abstract base classes (`ITopicService`, `IQuestionService`, `IAttemptService`).
   - Services accept and return Pydantic DTO objects directly.
   - Exception triggers raise domain-specific exceptions (`QuestionNotFoundException`, `InvalidOptionIndexException`).
 
 #### C. Data Access & Repository Layer (`app/repository/`, `app/utils/repository/`)
 - **Responsibility**: Constructing type-safe SQLAlchemy queries, executing database calls, handling pagination/filtering/sorting, and fetching raw DB aggregate tuples.
-- **Rules**:
+- **Key Rules**:
   - Repositories perform **pure data access only**. They do not calculate percentages or mutate business states.
   - Implement single-query `COUNT(*) OVER()` window count pagination via `BaseRepository.list_generic`.
 
@@ -119,7 +121,7 @@ app/dependencies/
 └── attempt.py        # get_attempt_repository, get_attempt_service
 ```
 
-### Injection Flow
+### Injection Sequence
 1. FastAPI resolves `get_attempt_service(db: AsyncSession = Depends(get_db_session))`.
 2. `get_attempt_service` instantiates concrete `AttemptRepository(db)` and `QuestionRepository(db)`.
 3. `AttemptService` is instantiated with these repository instances and returned as `IAttemptService`.
@@ -160,12 +162,12 @@ graph TD
 | **`RequestValidationError`** | FastAPI / Pydantic | `422 UNPROCESSABLE` | `VALIDATION_ERROR` | Raised automatically on payload schema/type mismatch |
 | **`Unhandled Exception`** | `Exception` | `500 INTERNAL ERROR` | `INTERNAL_SERVER_ERROR` | Catch-all for uncaught system bugs (logs traceback safely) |
 
-
 ---
 
 ## 5. Configuration & Environment Management
 
 Configuration management is powered by `pydantic-settings` in `app/core/config.py`:
+
 - Reads environment variables from system env or `.env` file.
 - Enforces strict validation of DB connection strings, log levels, and application metadata.
 - Leverages `@lru_cache` on `get_settings()` to avoid reading `.env` on every request.
